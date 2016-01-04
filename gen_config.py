@@ -142,7 +142,20 @@ def genBirdConfig(segments,gw,config):
 	inst = tlp.substitute(router_id=router_id)
 	fp = open("etc/bird/bird.conf","wb")
 	fp.write(inst)
+
 	fp.close()
+	fp = open("bird6.conf.tpl","rb")
+	tlp = Template(fp.read())
+	fp.close()
+	router_id = "10.191.255.%s"%(gw)	
+	if not os.path.exists("etc/bird"):
+		os.mkdir("etc/bird")
+	inst = tlp.substitute(router_id=router_id)
+	fp = open("etc/bird/bird6.conf","wb")
+	fp.write(inst)
+	fp.close()
+
+
 	
 def md(d):
 	if not os.path.exists(d):
