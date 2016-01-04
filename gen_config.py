@@ -148,8 +148,13 @@ def md(d):
 	if not os.path.exists(d):
 		os.mkdir(d)
 
+parser = argparse.ArgumentParser(description='Generate Configuration for Freifunk Gateway')
+parser.add_argument('--gwnum', dest='GWNUM', action='store', required=True,help='Config will be generated for this gateway')
+args = parser.parse_args()
+
+
 segments = ["00", "01","02","03","04"]
-gw=int(os.environ.get('GWNUM'))
+gw=int(args.GWNUM)
 md("etc")
 fp = open("config.json","rb")
 config = json.load(fp)
