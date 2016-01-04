@@ -132,7 +132,17 @@ def genFastdConfig(segments,gw,config):
 		fp.write(inst)
 		fp.close()
 
-	
+def genBirdConfig(segments,gw,config):
+	fp = open("bird.conf.tlp","rb")
+	tlp = Template(fp.read())
+	fp.close()
+	router_id = "10.191.255.%s"%(gw)	
+	if not os.path.exists("etc/bird"):
+		os.mkdir("etc/bird")
+	inst = tlp.substitute(router_id=router_id)
+	fp = open("etc/bird/bird.conf")
+	fp.write(inst)
+	fp.close()
 	
 def md(d):
 	if not os.path.exists(d):
@@ -150,5 +160,6 @@ genDhcp(segments,gw,config)
 genBindOptions(segments,gw,config)
 genBindLocal(segments,gw,config)
 genFastdConfig(segments,gw,config)
+genBirdConf(segments,gw,config)
 
 
