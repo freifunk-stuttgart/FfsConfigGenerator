@@ -7,10 +7,10 @@ iface br${seg} inet static
     up              /sbin/ip address add ${ipv6}/64 dev $$IFACE || true
     post-down       /sbin/brctl delbr $$IFACE || true
     # be sure all incoming traffic is handled by the appropriate rt_table
-    post-up         /sbin/ip rule add iif $$IFACE table stuttgart priority 5600 || true
-    pre-down        /sbin/ip rule del iif $$IFACE table stuttgart priority 5600 || true
-    post-up         /sbin/ip rule add iif $$IFACE table nodefault priority 5650 || true
-    pre-down        /sbin/ip rule del iif $$IFACE table nodefault priority 5650 || true
+    post-up         /sbin/ip rule add iif $$IFACE table stuttgart priority 10000 || true
+    pre-down        /sbin/ip rule del iif $$IFACE table stuttgart priority 10000 || true
+    post-up         /sbin/ip rule add iif $$IFACE table nodefault priority 10010 || true
+    pre-down        /sbin/ip rule del iif $$IFACE table nodefault priority 10010 || true
     post-up         /sbin/ip route add ${ipv4net} table stuttgart dev $$IFACE || true
     post-down       /sbin/ip route del ${ipv4net} table stuttgart dev $$IFACE || true
     # default route is unreachable
