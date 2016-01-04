@@ -42,7 +42,16 @@
 			"ipv4start" : "172.21.4.2",
 			"ipv4end"   : "172.21.7.254"
 		},
-		"4":
+                "2":
+                {
+                        "externalipv4": "37.187.22.156",
+                        "externalipv6": "2001:41d0:a:169c::1",
+                        "legacyipv4": "172.21.8.1",
+                        "legacyipv6": "fd21:b4dc:4b1e::a38:2",
+                        "ipv4start" : "172.21.8.10",
+                        "ipv4end"   : "172.21.8.254"
+                },
+ 		"4":
 		{
 			"externalipv4": "10.99.250.2",
 			"externalipv6": "2001:8d8:907:d901:5054:ff:fe2e:f2cc",
