@@ -22,7 +22,7 @@ def genNetwork(segments, gw,config):
 			ipv4 = config["gws"]["%s"%(gw)]["legacyipv4"]
 		else:
 			ipv4 = str(ip.network+gw)
-		inst = tmpl.substitute(gw="0%i"%(gw),seg=seg,ipv4=ipv4,ipv6=ipv6,ipv6net=ipv6net)
+		inst = tmpl.substitute(gw="0%i"%(gw),seg=seg,ipv4=ipv4,ipv4net=ip,ipv6=ipv6,ipv6net=ipv6net)
 		fp = open("etc/network/interfaces.d/ffs-seg%s"%(seg), "wb")
 		fp.write(inst)
 		fp.close()

@@ -11,6 +11,8 @@ iface br${seg} inet static
     pre-down        /sbin/ip rule del iif $$IFACE table stuttgart priority 5600 || true
     post-up         /sbin/ip rule add iif $$IFACE table nodefault priority 5650 || true
     pre-down        /sbin/ip rule del iif $$IFACE table nodefault priority 5650 || true
+    post-up         /sbin/ip route add ${ipv4net} table stuttgart dev $$IFACE || true
+    post-down       /sbin/ip route del ${ipv4net} table stuttgart dev $$IFACE || true
     # default route is unreachable
     post-up         /sbin/ip route add unreachable default table nodefault || true
     # ULA route for rt_table stuttgart
