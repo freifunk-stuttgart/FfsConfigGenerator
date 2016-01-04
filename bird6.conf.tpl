@@ -12,7 +12,7 @@ protocol kernel {
 	import all;		# Default is import all
 	kernel table 70;	# Kernel table to synchronize with (default: main)
 	export filter {
-		krt_metric = 100;	
+		krt_metric = 2000;	
 		accept;
 	};
 }
