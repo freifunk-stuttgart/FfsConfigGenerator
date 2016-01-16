@@ -6,6 +6,7 @@ interface br${seg}
 
     # don't advertise default router
     AdvDefaultLifetime 0;
+    UnicastOnly on;
 
     prefix ${ipv6net}
     {};
