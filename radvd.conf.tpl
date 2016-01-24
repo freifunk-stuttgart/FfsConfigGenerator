@@ -14,8 +14,6 @@ interface br${seg}
     RDNSS ${ipv6}
     {};
 
-    route fd21:b4dc:4b00::a38:1/128
-    {
-    };
-	 
+${hostroutes}
+${netroutes}
 };
