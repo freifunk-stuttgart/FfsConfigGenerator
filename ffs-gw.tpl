@@ -34,6 +34,7 @@ allow-hotplug vpn${seg}
 iface vpn${seg} inet6 manual
     hwaddress 02:00:0a:38:${seg}:${gw}
     pre-up          /sbin/modprobe batman_adv || true
+    pre-up          /sbin/ip link set dev $$IFACE address 02:00:0a:38:${seg}:${gw} || true
     post-up         /usr/sbin/batctl -m bat${seg} if add $$IFACE || true
     post-up         /sbin/ip link set dev bat${seg} up || true
 
