@@ -16,13 +16,13 @@ def genNetwork(segments, gw,config):
             continue
         ip = IPNetwork(config["segments"][seg]["ipv4network"])
         ipv6net = IPNetwork(config["segments"][seg]["ipv6network"])
-        ipv6addr = IPAddress("::a38:%i"%(gw),6)
+        ipv6addr = IPAddress("::a38:%02i"%(gw),6)
         ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw))
         if seg == "00":
             ipv4 = config["gws"]["%s"%(gw)]["legacyipv4"]
         else:
             ipv4 = str(ip.network+gw)
-        inst = tmpl.substitute(gw="0%i"%(gw),seg=seg,ipv4=ipv4,ipv4net=ip,ipv6=ipv6,ipv6net=ipv6net)
+        inst = tmpl.substitute(gw="%02i"%(gw),seg=seg,ipv4=ipv4,ipv4net=ip,ipv6=ipv6,ipv6net=ipv6net)
         fp = open("etc/network/interfaces.d/ffs-seg%s"%(seg), "wb")
         fp.write(inst)
         fp.close()
@@ -45,9 +45,9 @@ def genRadvd(segments, gw,config):
                 ipv6net = IPNetwork(config["segments"][netroute]["ipv6network"])
                 netroutes += "    route %s\n    {\n    };\n\n"%(ipv6net) 
         ipv6net = IPNetwork(config["segments"][seg]["ipv6network"])
-        ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw))
+        ipv6 = ipv6net.ip+IPAddress("::a38:%02i"%(gw))
 
-        inst = tpl.substitute(gw="0%i"%(gw),seg=seg,ipv6=ipv6,ipv6net=ipv6net,hostroutes=hostroutes,netroutes=netroutes)
+        inst = tpl.substitute(gw="%02i"%(gw),seg=seg,ipv6=ipv6,ipv6net=ipv6net,hostroutes=hostroutes,netroutes=netroutes)
         fp.write(inst)
     fp.close()
 
