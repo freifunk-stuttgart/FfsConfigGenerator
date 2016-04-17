@@ -2,11 +2,12 @@ interface br${seg}
 {
     AdvSendAdvert on;
     IgnoreIfMissing on;
+    MinRtrAdvInterval 10;
     MaxRtrAdvInterval 200;
 
     # don't advertise default router
     AdvDefaultLifetime 0;
-    UnicastOnly on;
+    MinDelayBetweenRAs 10;
 
     prefix ${ipv6net}
     {};

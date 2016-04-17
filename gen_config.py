@@ -80,7 +80,7 @@ def genDhcp(segments, gw,config):
             for  i in range(1,gw):
                 dhcp_ipnet = dhcp_ipnet.next()
         
-            ipv4start = str(dhcp_ipnet.network+10)
+            ipv4start = str(dhcp_ipnet.network+257)
             ipv4end = str(dhcp_ipnet.broadcast-1)
         
         inst = tpl.substitute(ipv4start=ipv4start,ipv4end=ipv4end,ipv4net=ipv4net,ipv4gw=ipv4gw)
