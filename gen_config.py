@@ -16,12 +16,15 @@ def genNetwork(segments, gw,config):
             continue
         ip = IPNetwork(config["segments"][seg]["ipv4network"])
         ipv6net = IPNetwork(config["segments"][seg]["ipv6network"])
-        ipv6addr = IPAddress("::a38:%02i"%(gw),6)
-        ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw))
+        #ipv6addr = IPAddress("::a38:%02i"%(gw),6)
+        ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw*100+instance))
         if seg == "00":
             ipv4 = config["gws"]["%s"%(gw)]["legacyipv4"]
         else:
-            ipv4 = str(ip.network+gw)
+            if instance == 0:
+		ipv4 = str(ip.network+gw)
+            else:
+		ipv4 = str(ip.network+gw*10+instance)
         inst = tmpl.substitute(gw="%02i"%(gw),seg=seg,ipv4=ipv4,ipv4net=ip,ipv6=ipv6,ipv6net=ipv6net)
         fp = open("etc/network/interfaces.d/ffs-seg%s"%(seg), "wb")
         fp.write(inst)
@@ -172,11 +175,13 @@ def md(d):
 
 parser = argparse.ArgumentParser(description='Generate Configuration for Freifunk Gateway')
 parser.add_argument('--gwnum', dest='GWNUM', action='store', required=True,help='Config will be generated for this gateway')
+parser.add_argument('--instance', dest='INSTANCE', action='store', required=True,help='Config will be generated for this instance of a gateway')
 args = parser.parse_args()
 
 
 segments = ["00", "01","02","03","04"]
 gw=int(args.GWNUM)
+instance=int(args.INSTANCE)
 md("etc")
 fp = open("config.json","rb")
 config = json.load(fp)
