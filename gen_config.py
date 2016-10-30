@@ -27,7 +27,7 @@ def genNetwork(segments, gw,config):
 		ipv4 = str(ip.network+gw)
             else:
 		ipv4 = str(ip.network+gw*10+instance)
-        inst = tmpl.substitute(gw="%02i"%(gw),seg=seg,ipv4=ipv4,ipv4net=ip,ipv6=ipv6,ipv6net=ipv6net,instance=instance)
+        inst = tmpl.substitute(gw="%02i"%(gw),seg=seg,ipv4=ipv4,ipv4net=ip,ipv6=ipv6,ipv6net=ipv6net,instance="%02i"%(instance))
         fp = open("etc/network/interfaces.d/ffs-seg%s"%(seg), "wb")
         fp.write(inst)
         fp.close()
