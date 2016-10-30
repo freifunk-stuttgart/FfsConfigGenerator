@@ -25,7 +25,7 @@ iface bat${seg} inet6 manual
     pre-up          /sbin/modprobe batman-adv || true
     post-up         /sbin/brctl addif br${seg} $$IFACE || true
     post-up         /sbin/ip link set dev $$IFACE up || true
-    post-up         /sbin/ip link set dev $$IFACE address 02:00:39:${seg}:${gw}:{instance} || true
+    post-up         /sbin/ip link set dev $$IFACE address 02:00:39:${seg}:${gw}:${instance} || true
     post-up         /usr/sbin/batctl -m $$IFACE it 10000 || true
     post-up         /usr/sbin/batctl -m $$IFACE vm server || true
     post-up         /usr/sbin/batctl -m $$IFACE gw server  96mbit/96mbit || true
