@@ -27,7 +27,7 @@ def genNetwork(segments, gw,config):
 		ipv4 = str(ip.network+gw)
             else:
 		ipv4 = str(ip.network+gw*10+instance)
-        inst = tmpl.substitute(gw="%02i"%(gw),seg=seg,ipv4=ipv4,ipv4net=ip,ipv6=ipv6,ipv6net=ipv6net)
+        inst = tmpl.substitute(gw="%02i"%(gw),seg=seg,ipv4=ipv4,ipv4net=ip,ipv6=ipv6,ipv6net=ipv6net,instance=instance)
         fp = open("etc/network/interfaces.d/ffs-seg%s"%(seg), "wb")
         fp.write(inst)
         fp.close()
@@ -39,10 +39,7 @@ def genRadvd(segments, gw,config):
     tpl = Template(fp.read())
     fp.close()
     fp = open("etc/radvd.conf","wb")
-    if gw==1:
-        hostroutes = "    route fd21:b4dc:4b00::a38:1/128\n    {\n    };\n"
-    else:
-        hostroutes = ""
+    hostroutes = "    route fd21:b4dc:4b00::/64\n    {\n    };\n"
     for seg in segments:
         netroutes = ""
         for netroute in segments:
@@ -50,7 +47,10 @@ def genRadvd(segments, gw,config):
                 ipv6net = IPNetwork(config["segments"][netroute]["ipv6network"])
                 netroutes += "    route %s\n    {\n    };\n\n"%(ipv6net) 
         ipv6net = IPNetwork(config["segments"][seg]["ipv6network"])
-        ipv6 = ipv6net.ip+IPAddress("::a38:%02i"%(gw))
+        if instance == 0:
+            ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw))
+        else:
+            ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw*100+instance))
 
         inst = tpl.substitute(gw="%02i"%(gw),seg=seg,ipv6=ipv6,ipv6net=ipv6net,hostroutes=hostroutes,netroutes=netroutes)
         fp.write(inst)
@@ -96,8 +96,8 @@ def genBindOptions(segments,gw,config):
     fp.close()
     md("etc/bind")
     fp = open("etc/bind/named.conf.options","wb")
-    ipv4ips = "%s; "%(config["gws"]["%s"%(gw)]["legacyipv4"])
-    ipv6ips = "%s; "%(config["gws"]["%s"%(gw)]["legacyipv6"])
+    ipv4ips = "%s; "%(config["gws"]["%s"%(gw)]["instance"]["%s"%(instance)]["legacyipv4"])
+    ipv6ips = "%s; "%(config["gws"]["%s"%(gw)]["instance"]["%s"%(instance)]["legacyipv6"])
     for seg in segments:
         if seg == "00":
             continue
@@ -129,8 +129,8 @@ def genFastdConfig(segments,gw,config):
     fp = open("fastd.conf.tpl","rb")
     tpl = Template(fp.read())
     fp.close()
-    externalipv4 = config["gws"]["%s"%(gw)]["externalipv4"]
-    externalipv6 = config["gws"]["%s"%(gw)]["externalipv6"]
+    externalipv4 = config["gws"]["%s"%(gw)]["instance"]["%s"%(instance)]["externalipv4"]
+    externalipv6 = config["gws"]["%s"%(gw)]["instance"]["%s"%(instance)]["externalipv6"]
 
     if not os.path.exists("etc/fastd"):
         os.mkdir("etc/fastd")
@@ -150,7 +150,7 @@ def genBirdConfig(segments,gw,config):
     fp = open("bird.conf.tpl","rb")
     tlp = Template(fp.read())
     fp.close()
-    router_id = "10.191.255.%s"%(gw)    
+    router_id = "10.191.255.%s"%(gw+(instance*10))    
     if not os.path.exists("etc/bird"):
         os.mkdir("etc/bird")
     inst = tlp.substitute(router_id=router_id)
@@ -161,7 +161,7 @@ def genBirdConfig(segments,gw,config):
     fp = open("bird6.conf.tpl","rb")
     tlp = Template(fp.read())
     fp.close()
-    router_id = "10.191.255.%s"%(gw)    
+    router_id = "10.191.255.%s"%(gw+(instance*10))    
     if not os.path.exists("etc/bird"):
         os.mkdir("etc/bird")
     inst = tlp.substitute(router_id=router_id)
@@ -190,7 +190,7 @@ config = json.load(fp)
 fp.close()
 genNetwork(segments,gw,config)
 genRadvd(segments,gw,config)
-genDhcp(segments,gw,config)
+#genDhcp(segments,gw,config)
 genBindOptions(segments,gw,config)
 genBindLocal(segments,gw,config)
 genFastdConfig(segments,gw,config)

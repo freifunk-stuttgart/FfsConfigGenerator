@@ -3,7 +3,7 @@ iface br${seg} inet static
     bridge_ports none
     bridge_fd 0
     bridge_maxwait 0
-    bridge_hw 02:00:39:${seg}:${gw}:00
+    bridge_hw 02:00:39:${seg}:${gw}:${instance}
     address ${ipv4}
     netmask 255.255.192.0
     up              /sbin/ip address add ${ipv6}/64 dev $$IFACE || true
@@ -25,7 +25,7 @@ iface bat${seg} inet6 manual
     pre-up          /sbin/modprobe batman-adv || true
     post-up         /sbin/brctl addif br${seg} $$IFACE || true
     post-up         /sbin/ip link set dev $$IFACE up || true
-    post-up         /sbin/ip link set dev $$IFACE address 02:00:39:${seg}:${gw}:00 || true
+    post-up         /sbin/ip link set dev $$IFACE address 02:00:39:${seg}:${gw}:{instance} || true
     post-up         /usr/sbin/batctl -m $$IFACE it 10000 || true
     post-up         /usr/sbin/batctl -m $$IFACE vm server || true
     post-up         /usr/sbin/batctl -m $$IFACE gw server  96mbit/96mbit || true
@@ -35,9 +35,9 @@ iface bat${seg} inet6 manual
 
 allow-hotplug vpn${seg}
 iface vpn${seg} inet6 manual
-    hwaddress 02:00:38:${seg}:${gw}:00
+    hwaddress 02:00:38:${seg}:${gw}:${instance}
     pre-up          /sbin/modprobe batman_adv || true
-    pre-up          /sbin/ip link set dev $$IFACE address 02:00:38:${seg}:${gw}:00 || true
+    pre-up          /sbin/ip link set dev $$IFACE address 02:00:38:${seg}:${gw}:${instance} || true
     post-up         /sbin/ip link set dev $$IFACE up || true
     post-up         /usr/sbin/batctl -m bat${seg} if add $$IFACE || true
 
