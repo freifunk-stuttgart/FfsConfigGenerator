@@ -10,4 +10,7 @@ include "secret.conf";
 mtu 1406; # 1492 - IPv4/IPv6 Header - fastd Header...
 on verify "/root/freifunk/unclaimed.py";
 status socket "/var/run/fastd-vpn${seg}.sock";
-include peers from "peers";
+
+peer group "peers" {
+    include peers from "/etc/fastd/peers-ffs/vpn${seg}/peers";
+}
