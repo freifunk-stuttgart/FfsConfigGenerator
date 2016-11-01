@@ -157,10 +157,22 @@ def genFastdConfig(segments,gw,config):
             port = 10037
         else:
             port = int(seg)+10040
-        inst = tpl.substitute(port=port,seg=seg,externalipv4=externalipv4,externalipv6=externalipv6)
+        inst = tpl.substitute(port=port,seg=seg,segext="",externalipv4=externalipv4,externalipv6=externalipv6,group="peers")
         if not os.path.exists("etc/fastd/vpn%s"%(seg)):
             os.mkdir("etc/fastd/vpn%s"%(seg))
         fp=open("etc/fastd/vpn%s/fastd.conf"%(seg),"wb")
+        fp.write(inst)
+        fp.close()
+
+    for seg in segments:
+        if seg == "00":
+            port = 9037
+        else:
+            port = int(seg)+9040
+        inst = tpl.substitute(port=port,seg=seg,segext="bb",externalipv4=externalipv4,externalipv6=externalipv6,group="bb")
+        if not os.path.exists("etc/fastd/vpn%sbb"%(seg)):
+            os.mkdir("etc/fastd/vpn%sbb"%(seg))
+        fp=open("etc/fastd/vpn%sbb/fastd.conf"%(seg),"wb")
         fp.write(inst)
         fp.close()
 
