@@ -5,6 +5,13 @@ import argparse
 import os
 import json
 
+def getGwList(config):
+    result = []
+    for gw in config[gws].keys():
+        s = gw.split(",")
+        result.append("gw%02dn%02d"%(int(s[0]),int(s[1])))
+    return result
+
 def genNetwork(segments, gw,config):
     fp = open("ffs-gw.tpl","rb")
     tmpl = Template(fp.read())
@@ -96,8 +103,8 @@ def genBindOptions(segments,gw,config):
     fp.close()
     md("etc/bind")
     fp = open("etc/bind/named.conf.options","wb")
-    ipv4ips = "%s; "%(config["gws"]["%s"%(gw)]["instance"]["%s"%(instance)]["legacyipv4"])
-    ipv6ips = "%s; "%(config["gws"]["%s"%(gw)]["instance"]["%s"%(instance)]["legacyipv6"])
+    ipv4ips = "%s; "%(config["gws"]["%s,%s"%(gw,instance)]["legacyipv4"])
+    ipv6ips = "%s; "%(config["gws"]["%s,%s"%(gw,instance)]["legacyipv6"])
     for seg in segments:
         if seg == "00":
             continue
@@ -129,8 +136,8 @@ def genFastdConfig(segments,gw,config):
     fp = open("fastd.conf.tpl","rb")
     tpl = Template(fp.read())
     fp.close()
-    externalipv4 = config["gws"]["%s"%(gw)]["instance"]["%s"%(instance)]["externalipv4"]
-    externalipv6 = config["gws"]["%s"%(gw)]["instance"]["%s"%(instance)]["externalipv6"]
+    externalipv4 = config["gws"]["%s,%s"%(gw,instance)]["externalipv4"]
+    externalipv6 = config["gws"]["%s,%s"%(gw,instance)]["externalipv6"]
 
     if not os.path.exists("etc/fastd"):
         os.mkdir("etc/fastd")
