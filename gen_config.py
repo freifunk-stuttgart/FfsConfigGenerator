@@ -5,6 +5,24 @@ import argparse
 import os
 import json
 
+def genTinc(gw, instance, config):
+    fp = open("tinc.conf.tpl","rb")
+    tmpl = Template(fp.read())
+    fp.close()
+    md("etc/tinc")
+    md("etc/tinc/ffsbb")
+    gws = ["gw01n00","gw01n01","gw05n01","gw05n02","gw05n03","gw05n04","gw08n00","gw08n01","gw08n02","gw08n03","gw08n04","gw09"]
+    connects = ""
+    for g in gws:
+        connects += "ConnectTo = %s\n"%(g)
+    inst = tmpl.substitute(interface="eth0",connects=connects,gw="gw%02dn%02d"%(gw,instance))
+    fp = open("etc/tinc/ffsbb/tinc.conf","wb")
+    fp.write(inst)
+    fp.close()
+
+
+
+
 def genNetwork(segments, gw,config):
     fp = open("ffs-gw.tpl","rb")
     tmpl = Template(fp.read())
@@ -188,6 +206,7 @@ md("etc")
 fp = open("config.json","rb")
 config = json.load(fp)
 fp.close()
+genTinc(gw,instance,config)
 genNetwork(segments,gw,config)
 genRadvd(segments,gw,config)
 #genDhcp(segments,gw,config)
