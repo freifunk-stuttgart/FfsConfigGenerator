@@ -7,7 +7,9 @@ AddressFamily = any
 BindToInterface = ${interface}
 Broadcast = mst
 
-${connects}
+ConnectTo = dhcp01
+ConnectTo = dhcp02
+ConnectTo = dhcp03
 
 Mode = switch
 Forwarding = internal
