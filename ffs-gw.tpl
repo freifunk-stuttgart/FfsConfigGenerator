@@ -1,21 +1,24 @@
 auto br${seg}
 iface br${seg} inet static
+    hwaddress 02:00:39:${seg}:${gw}:${instance}
     bridge_ports none
     bridge_fd 0
     bridge_maxwait 0
     bridge_hw 02:00:39:${seg}:${gw}:${instance}
     address ${ipv4}
     netmask 255.255.192.0
+    pre-up          /sbin/brctl addbr $$IFACE || true
     up              /sbin/ip address add ${ipv6}/64 dev $$IFACE || true
+    post-down       /sbin/brctl delbr $$IFACE || true
     # be sure all incoming traffic is handled by the appropriate rt_table
     post-up         /sbin/ip rule add iif $$IFACE table stuttgart priority 10000 || true
     pre-down        /sbin/ip rule del iif $$IFACE table stuttgart priority 10000 || true
     post-up         /sbin/ip rule add iif $$IFACE table nodefault priority 10010 || true
     pre-down        /sbin/ip rule del iif $$IFACE table nodefault priority 10010 || true
-    # default route is unreachable
     post-up         /sbin/ip route add ${ipv4net} table stuttgart dev $$IFACE || true
-    post-up         /sbin/ip route add unreachable default table nodefault || true
     post-down       /sbin/ip route del ${ipv4net} table stuttgart dev $$IFACE || true
+    # default route is unreachable
+    post-up         /sbin/ip route add unreachable default table nodefault || true
     # ULA route for rt_table stuttgart
     post-up         /sbin/ip -6 route add ${ipv6net} proto static dev $$IFACE table stuttgart || true
     post-down       /sbin/ip -6 route del ${ipv6net} proto static dev $$IFACE table stuttgart || true
