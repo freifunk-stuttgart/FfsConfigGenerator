@@ -7,10 +7,36 @@ import json
 
 def getGwList(config):
     result = []
-    for gw in config[gws].keys():
+    for gw in config["gws"].keys():
         s = gw.split(",")
         result.append("gw%02dn%02d"%(int(s[0]),int(s[1])))
     return result
+
+def gen_ffsbb(gw, instance, config):
+    fp = open("tinc.conf.tpl","rb")
+    tmpl = Template(fp.read())
+    fp.close()
+    md("etc/tinc")
+    md("etc/tinc/ffsbb")
+    gws = ["gw01n00","gw01n01","gw05n01","gw05n02","gw05n03","gw05n04","gw08n00","gw08n01","gw08n02","gw08n03","gw08n04","gw09"]
+    inst = tmpl.substitute(interface="eth0",gw="gw%02dn%02d"%(gw,instance))
+    fp = open("etc/tinc/ffsbb/tinc.conf","wb")
+    fp.write(inst)
+    fp.close()
+    
+    fp = open("network-ffsbb.tpl","rb")
+    tmpl = Template(fp.read())
+    fp.close()
+    md("etc/network")
+    md("etc/network/interfaces.d")
+
+    idv4 = instance*10+gw
+    idv6 = instance*100+gw 
+    
+    inst = tmpl.substitute(idv4=idv4,idv6=idv6)
+    fp = open("etc/network/interfaces.d/ffsbb","wb")
+    fp.write(inst)
+    fp.close()
 
 def genNetwork(segments, gw,config):
     fp = open("ffs-gw.tpl","rb")
@@ -207,6 +233,7 @@ md("etc")
 fp = open("config.json","rb")
 config = json.load(fp)
 fp.close()
+gen_ffsbb(gw,instance,config)
 genNetwork(segments,gw,config)
 genRadvd(segments,gw,config)
 #genDhcp(segments,gw,config)
