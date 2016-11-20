@@ -129,8 +129,12 @@ def genBindOptions(segments,gw,config):
     fp.close()
     md("etc/bind")
     fp = open("etc/bind/named.conf.options","wb")
-    ipv4ips = "%s; "%(config["gws"]["%s,%s"%(gw,instance)]["legacyipv4"])
-    ipv6ips = "%s; "%(config["gws"]["%s,%s"%(gw,instance)]["legacyipv6"])
+    ipv4ips = ""
+    ipv6ips = ""
+    if "legacyipv4" in config["gws"]["%s,%s"%(gw,instance)]:
+        ipv4ips = "%s; "%(config["gws"]["%s,%s"%(gw,instance)]["legacyipv4"])
+    if "legacyipv6" in config["gws"]["%s,%s"%(gw,instance)]:
+        ipv6ips = "%s; "%(config["gws"]["%s,%s"%(gw,instance)]["legacyipv6"])
     for seg in segments:
         if seg == "00":
             continue
@@ -162,8 +166,12 @@ def genFastdConfig(segments,gw,config):
     fp = open("fastd.conf.tpl","rb")
     tpl = Template(fp.read())
     fp.close()
-    externalipv4 = config["gws"]["%s,%s"%(gw,instance)]["externalipv4"]
-    externalipv6 = config["gws"]["%s,%s"%(gw,instance)]["externalipv6"]
+    externalipv4 = None
+    externalipv6 = None
+    if "externalipv4" in config["gws"]["%s,%s"%(gw,instance)]:
+        externalipv4 = config["gws"]["%s,%s"%(gw,instance)]["externalipv4"]
+    if "externalipv6" in config["gws"]["%s,%s"%(gw,instance)]:
+        externalipv6 = config["gws"]["%s,%s"%(gw,instance)]["externalipv6"]
 
     if not os.path.exists("etc/fastd"):
         os.mkdir("etc/fastd")
@@ -172,7 +180,13 @@ def genFastdConfig(segments,gw,config):
             port = 10037
         else:
             port = int(seg)+10040
-        inst = tpl.substitute(port=port,seg=seg,segext="",externalipv4=externalipv4,externalipv6=externalipv6,group="peers")
+        bindv4 = ""
+        bindv6 = ""
+        if not externalipv4 == None:
+            bindv4 = "bind %s:%i;"%(externalipv4,port)
+        if not externalipv6 == None:
+            bindv6 = "bind %s:%i;"%(externalipv6,port)
+        inst = tpl.substitute(seg=seg,segext="",bindv4=bindv4,bindv6=bindv6,group="peers")
         if not os.path.exists("etc/fastd/vpn%s"%(seg)):
             os.mkdir("etc/fastd/vpn%s"%(seg))
         fp=open("etc/fastd/vpn%s/fastd.conf"%(seg),"wb")
@@ -184,7 +198,13 @@ def genFastdConfig(segments,gw,config):
             port = 9037
         else:
             port = int(seg)+9040
-        inst = tpl.substitute(port=port,seg=seg,segext="bb",externalipv4=externalipv4,externalipv6=externalipv6,group="bb")
+        bindv4 = ""
+        bindv6 = ""
+        if not externalipv4 == None:
+            bindv4 = "bind %s:%i;"%(externalipv4,port)
+        if not externalipv6 == None:
+            bindv6 = "bind %s:%i;"%(externalipv6,port)
+        inst = tpl.substitute(seg=seg,segext="bb",bindv4=bindv4,bindv6=bindv6,group="bb")
         if not os.path.exists("etc/fastd/vpn%sbb"%(seg)):
             os.mkdir("etc/fastd/vpn%sbb"%(seg))
         fp=open("etc/fastd/vpn%sbb/fastd.conf"%(seg),"wb")

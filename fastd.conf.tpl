@@ -3,8 +3,8 @@ interface "vpn${seg}${segext}";
 method "salsa2012+gmac";    # new method, between gateways for the moment (faster)
 method "salsa2012+umac";  
 # Bind von v4 and v6 interfaces
-bind ${externalipv4}:${port};
-bind [${externalipv6}]:${port};
+${bindv4}
+${bindv6}
 
 include "secret.conf";
 mtu 1406; # 1492 - IPv4/IPv6 Header - fastd Header...
