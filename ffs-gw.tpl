@@ -22,6 +22,7 @@ iface br${seg} inet static
     # ULA route for rt_table stuttgart
     post-up         /sbin/ip -6 route add ${ipv6net} proto static dev $$IFACE table stuttgart || true
     post-down       /sbin/ip -6 route del ${ipv6net} proto static dev $$IFACE table stuttgart || true
+    post-up         echo 4096 > /sys/devices/virtual/net/$$IFACE/bridge/hash_max || true
 
 allow-hotplug bat${seg}
 iface bat${seg} inet6 manual
@@ -32,9 +33,8 @@ iface bat${seg} inet6 manual
     post-up         /usr/sbin/batctl -m $$IFACE it 10000 || true
     post-up         /usr/sbin/batctl -m $$IFACE vm server || true
     post-up         /usr/sbin/batctl -m $$IFACE gw server  96mbit/96mbit || true
-    post-up         /usr/sbin/service alfred-vpn${seg} start || true
     pre-down        /sbin/brctl delif br${seg} $$IFACE || true
-    pre-down        /usr/sbin/service alfred-vpn${seg} stop || true
+    post-up         echo 60 > /sys/devices/virtual/net/$$IFACE/mesh/hop_penalty || true
 
 allow-hotplug vpn${seg}
 iface vpn${seg} inet6 manual
@@ -45,3 +45,10 @@ iface vpn${seg} inet6 manual
     post-up         /usr/sbin/batctl -m bat${seg} if add $$IFACE || true
 
 
+allow-hotplug vpn${seg}bb
+iface vpn${seg}bb inet6 manual
+    hwaddress 02:00:35:${seg}:${gw}:${instance}
+    pre-up          /sbin/modprobe batman_adv || true
+    pre-up          /sbin/ip link set dev $$IFACE address 02:00:35:${seg}:${gw}:${instance} || true
+    post-up         /sbin/ip link set dev $$IFACE up || true
+    post-up         /usr/sbin/batctl -m bat${seg} if add $$IFACE || true

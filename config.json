@@ -33,49 +33,29 @@
 
     "gws":
     {
-        "1":
+        "1,0":
         { 
-            "instance": 
-            {
-                "0":
-                {
-                    "externalipv4": "89.163.129.190",
-                    "externalipv6": "2001:4ba0:ffed:116::3",
-                    "legacyipv4": "172.21.4.1",
-                    "legacyipv6": "fd21:b4dc:4b1e::a38:1",
-                    "ipv4start" : "172.21.4.11",
-                    "ipv4end"   : "172.21.7.254"
-                },
-                "1":
-                {
-                    "externalipv4": "5.104.108.110",
-                    "externalipv6": "2001:4ba0:fff1:f8::10",
-                    "legacyipv4": "172.21.4.11",
-                    "legacyipv6": "fd21:b4dc:4b1e::a38:11",
-                    "ipv4start" : "172.21.5.11",
-                    "ipv4end"   : "172.21.7.254"
-                }
-            }
+            "externalipv4": "89.163.129.190",
+            "externalipv6": "2001:4ba0:ffed:116::3",
+            "legacyipv4": "172.21.4.1",
+            "legacyipv6": "fd21:b4dc:4b1e::a38:1",
+            "ipv4start" : "172.21.4.11",
+            "ipv4end"   : "172.21.7.254"
         },
-        "2":
+        "1,1":
         {
-            "externalipv4": "37.187.22.156",
-            "externalipv6": "2001:41d0:a:169c::1",
-            "legacyipv4": "172.21.8.1",
-            "legacyipv6": "fd21:b4dc:4b1e::a38:2",
-            "ipv4start" : "172.21.8.10",
-            "ipv4end"   : "172.21.8.254"
+            "externalipv4": "5.104.108.110",
+            "externalipv6": "2001:4ba0:fff1:f8::10",
+            "legacyipv4": "172.21.4.11",
+            "legacyipv6": "fd21:b4dc:4b1e::a38:11",
+            "ipv4start" : "172.21.5.11",
+            "ipv4end"   : "172.21.7.254"
         },
-        "4":
+        "1,3":
         {
-            "externalipv4": "10.99.250.2",
-            "externalipv6": "2001:8d8:907:d901:5054:ff:fe2e:f2cc",
-            "legacyipv4": "172.21.16.1",
-            "legacyipv6": "fd21:b4dc:4b1e::a38:4",
-            "ipv4start" : "172.21.16.2",
-            "ipv4end"   : "172.21.19.254"
+            "externalipv6": "2001:4ba0:fff1:f8:26b:2727:103a:8a4c"
         },
-        "5":
+        "5,1":
         {
             "externalipv4": "91.226.89.224",
             "externalipv6": "::1",
@@ -84,16 +64,7 @@
             "ipv4start" : "172.21.20.2",
             "ipv4end"   : "172.21.23.254"
         },
-        "7":
-        {
-            "externalipv4": "81.7.7.159",
-            "externalipv6": "fd00::1",
-            "legacyipv4": "172.21.28.1",
-            "legacyipv6": "fd21:b4dc:4b1e::a38:7",
-            "ipv4start" : "172.21.28.2",
-            "ipv4end"   : "172.21.31.254"
-        },
-        "8":
+        "8,0":
         {
             "externalipv4": "5.196.123.227",
             "externalipv6": "::1",

@@ -5,6 +5,39 @@ import argparse
 import os
 import json
 
+def getGwList(config):
+    result = []
+    for gw in config["gws"].keys():
+        s = gw.split(",")
+        result.append("gw%02dn%02d"%(int(s[0]),int(s[1])))
+    return result
+
+def gen_ffsbb(gw, instance, config):
+    fp = open("tinc.conf.tpl","rb")
+    tmpl = Template(fp.read())
+    fp.close()
+    md("etc/tinc")
+    md("etc/tinc/ffsbb")
+    gws = ["gw01n00","gw01n01","gw05n01","gw05n02","gw05n03","gw05n04","gw08n00","gw08n01","gw08n02","gw08n03","gw08n04","gw09"]
+    inst = tmpl.substitute(interface="eth0",gw="gw%02dn%02d"%(gw,instance))
+    fp = open("etc/tinc/ffsbb/tinc.conf","wb")
+    fp.write(inst)
+    fp.close()
+    
+    fp = open("network-ffsbb.tpl","rb")
+    tmpl = Template(fp.read())
+    fp.close()
+    md("etc/network")
+    md("etc/network/interfaces.d")
+
+    idv4 = instance*10+gw
+    idv6 = instance*100+gw 
+    
+    inst = tmpl.substitute(idv4=idv4,idv6=idv6)
+    fp = open("etc/network/interfaces.d/ffsbb","wb")
+    fp.write(inst)
+    fp.close()
+
 def genNetwork(segments, gw,config):
     fp = open("ffs-gw.tpl","rb")
     tmpl = Template(fp.read())
@@ -96,8 +129,12 @@ def genBindOptions(segments,gw,config):
     fp.close()
     md("etc/bind")
     fp = open("etc/bind/named.conf.options","wb")
-    ipv4ips = "%s; "%(config["gws"]["%s"%(gw)]["instance"]["%s"%(instance)]["legacyipv4"])
-    ipv6ips = "%s; "%(config["gws"]["%s"%(gw)]["instance"]["%s"%(instance)]["legacyipv6"])
+    ipv4ips = ""
+    ipv6ips = ""
+    if "legacyipv4" in config["gws"]["%s,%s"%(gw,instance)]:
+        ipv4ips = "%s; "%(config["gws"]["%s,%s"%(gw,instance)]["legacyipv4"])
+    if "legacyipv6" in config["gws"]["%s,%s"%(gw,instance)]:
+        ipv6ips = "%s; "%(config["gws"]["%s,%s"%(gw,instance)]["legacyipv6"])
     for seg in segments:
         if seg == "00":
             continue
@@ -129,8 +166,12 @@ def genFastdConfig(segments,gw,config):
     fp = open("fastd.conf.tpl","rb")
     tpl = Template(fp.read())
     fp.close()
-    externalipv4 = config["gws"]["%s"%(gw)]["instance"]["%s"%(instance)]["externalipv4"]
-    externalipv6 = config["gws"]["%s"%(gw)]["instance"]["%s"%(instance)]["externalipv6"]
+    externalipv4 = None
+    externalipv6 = None
+    if "externalipv4" in config["gws"]["%s,%s"%(gw,instance)]:
+        externalipv4 = config["gws"]["%s,%s"%(gw,instance)]["externalipv4"]
+    if "externalipv6" in config["gws"]["%s,%s"%(gw,instance)]:
+        externalipv6 = config["gws"]["%s,%s"%(gw,instance)]["externalipv6"]
 
     if not os.path.exists("etc/fastd"):
         os.mkdir("etc/fastd")
@@ -139,10 +180,34 @@ def genFastdConfig(segments,gw,config):
             port = 10037
         else:
             port = int(seg)+10040
-        inst = tpl.substitute(port=port,seg=seg,externalipv4=externalipv4,externalipv6=externalipv6)
+        bindv4 = ""
+        bindv6 = ""
+        if not externalipv4 == None:
+            bindv4 = "bind %s:%i;"%(externalipv4,port)
+        if not externalipv6 == None:
+            bindv6 = "bind %s:%i;"%(externalipv6,port)
+        inst = tpl.substitute(seg=seg,segext="",bindv4=bindv4,bindv6=bindv6,group="peers")
         if not os.path.exists("etc/fastd/vpn%s"%(seg)):
             os.mkdir("etc/fastd/vpn%s"%(seg))
         fp=open("etc/fastd/vpn%s/fastd.conf"%(seg),"wb")
+        fp.write(inst)
+        fp.close()
+
+    for seg in segments:
+        if seg == "00":
+            port = 9037
+        else:
+            port = int(seg)+9040
+        bindv4 = ""
+        bindv6 = ""
+        if not externalipv4 == None:
+            bindv4 = "bind %s:%i;"%(externalipv4,port)
+        if not externalipv6 == None:
+            bindv6 = "bind %s:%i;"%(externalipv6,port)
+        inst = tpl.substitute(seg=seg,segext="bb",bindv4=bindv4,bindv6=bindv6,group="bb")
+        if not os.path.exists("etc/fastd/vpn%sbb"%(seg)):
+            os.mkdir("etc/fastd/vpn%sbb"%(seg))
+        fp=open("etc/fastd/vpn%sbb/fastd.conf"%(seg),"wb")
         fp.write(inst)
         fp.close()
 
@@ -188,6 +253,7 @@ md("etc")
 fp = open("config.json","rb")
 config = json.load(fp)
 fp.close()
+gen_ffsbb(gw,instance,config)
 genNetwork(segments,gw,config)
 genRadvd(segments,gw,config)
 #genDhcp(segments,gw,config)
