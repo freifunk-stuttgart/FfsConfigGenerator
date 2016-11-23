@@ -7,7 +7,7 @@ AddressFamily = any
 BindToInterface = ${interface}
 Broadcast = mst
 
-ConnectTo = dhcp01
+#ConnectTo = dhcp01
 ConnectTo = dhcp02
 ConnectTo = dhcp03
 
