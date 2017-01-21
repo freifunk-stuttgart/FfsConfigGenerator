@@ -247,13 +247,13 @@ parser.add_argument('--instance', dest='INSTANCE', action='store', required=True
 args = parser.parse_args()
 
 
-segments = ["00", "01","02","03","04"]
 gw=int(args.GWNUM)
 instance=int(args.INSTANCE)
 md("etc")
 fp = open("config.json","rb")
 config = json.load(fp)
 fp.close()
+segments = config["segments"].keys()
 gen_ffsbb(gw,instance,config)
 genNetwork(segments,gw,config)
 genRadvd(segments,gw,config)
