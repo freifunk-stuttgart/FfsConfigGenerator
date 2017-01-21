@@ -48,6 +48,7 @@ def genNetwork(segments, gw,config):
         if seg == "00":
             continue
         ip = IPNetwork(config["segments"][seg]["ipv4network"])
+        ipv4netmask=ip.netmask
         ipv6net = IPNetwork(config["segments"][seg]["ipv6network"])
         if instance == 0:
             ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw))
@@ -60,7 +61,7 @@ def genNetwork(segments, gw,config):
 		ipv4 = str(ip.network+gw)
             else:
 		ipv4 = str(ip.network+gw*10+instance)
-        inst = tmpl.substitute(gw="%02i"%(gw),seg=seg,ipv4=ipv4,ipv4net=ip,ipv6=ipv6,ipv6net=ipv6net,instance="%02i"%(instance))
+        inst = tmpl.substitute(gw="%02i"%(gw),seg=seg,ipv4=ipv4,ipv4net=ip,ipv4netmask=ipv4netmask,ipv6=ipv6,ipv6net=ipv6net,instance="%02i"%(instance))
         fp = open("etc/network/interfaces.d/ffs-seg%s"%(seg), "wb")
         fp.write(inst)
         fp.close()

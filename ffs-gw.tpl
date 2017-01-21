@@ -6,7 +6,7 @@ iface br${seg} inet static
     bridge_maxwait 0
     bridge_hw 02:00:39:${seg}:${gw}:${instance}
     address ${ipv4}
-    netmask 255.255.192.0
+    netmask ${ipv4netmask}
     pre-up          /sbin/brctl addbr $$IFACE || true
     up              /sbin/ip address add ${ipv6}/64 dev $$IFACE || true
     post-down       /sbin/brctl delbr $$IFACE || true
