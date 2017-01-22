@@ -59,8 +59,7 @@
     {
         "1,0":
         { 
-            "externalipv4": "89.163.129.190",
-            "externalipv6": "2001:4ba0:ffed:116::3",
+            "externalipv6": "2001:4ba0:fff1:f8::9",
             "legacyipv4": "172.21.4.1",
             "legacyipv6": "fd21:b4dc:4b1e::a38:1",
             "ipv4start" : "172.21.4.11",
