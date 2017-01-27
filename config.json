@@ -74,7 +74,7 @@
         {
             "externalipv6": "2001:4ba0:fff1:f8:26b:2727:103a:8a4c"
         },
-        "5,1":
+        "5,0":
         {
             "externalipv4": "91.226.89.224",
             "externalipv6": "::1",

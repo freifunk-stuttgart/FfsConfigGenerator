@@ -30,7 +30,10 @@ def gen_ffsbb(gw, instance, config):
     md("etc/network")
     md("etc/network/interfaces.d")
 
-    idv4 = instance*10+gw
+    if instance == 0:
+        idv4 = gw
+    else:
+        idv4 = gw*10+instance
     idv6 = instance*100+gw 
     
     inst = tmpl.substitute(idv4=idv4,idv6=idv6)
