@@ -12,6 +12,35 @@ def getGwList(config):
         result.append("gw%02dn%02d"%(int(s[0]),int(s[1])))
     return result
 
+def genFfrl(gw, instance,config):
+    if not "ffrl_ipv4" in config['gws']["%i,%i"%(gw,instance)]:
+        return
+    fp = open("ffrl.tpl","rb")
+    tmpl = Template(fp.read())
+    fp.close()
+    interfaces = {}
+    interfaces["bb-a.ak.ber"] =  ("89.163.131.200","100.64.8.164","100.64.8.165","2a03:2260:0:46f::2/64")
+    interfaces["bb-a.fra2.fra"] = ("89.163.131.200","100.64.8.166","100.64.8.167","2a03:2260:0:470::2")
+    interfaces["bb-a.ix.dus"] = ("89.163.131.200","100.64.8.168","100.64.8.169","2a03:2260:0:471::2")
+    interfaces["bb-b.ak.ber"] = ("89.163.131.200","100.64.8.170","100.64.8.171","2a03:2260:0:472::2")
+    interfaces["bb-b.fra2.fra"] = ("89.163.131.200","100.64.8.172","100.64.8.173","2a03:2260:0:473::2")
+    interfaces["bb-b.ix.dus"] = ("89.163.131.200","100.64.8.174","100.64.8.175","2a03:2260:0:474::2")
+    data = ""
+    for interface in interfaces:
+        i = interfaces[interface]
+        localv4 = config['gws']["%i,%i"%(gw,instance)]["externalipv4"]
+        natv4 = config['gws']["%i,%i"%(gw,instance)]["ffrl_ipv4"]
+        data += tmpl.substitute(IFACE=interface,
+                                TUN_LOCAL_V4=i[2],
+                                TUN_REMOTE_V4=i[1],
+                                TUN_LOCAL_V6=i[3],
+                                GRE_REMOTE=i[0],
+                                GRE_LOCAL=localv4,
+                                NAT_V4=natv4)
+    
+    with open("etc/network/interfaces.d/ffrl","wb") as fp:
+        fp.write(data)
+
 def gen_ffsbb(gw, instance, config):
     fp = open("tinc.conf.tpl","rb")
     tmpl = Template(fp.read())
@@ -265,5 +294,5 @@ genBindOptions(segments,gw,config)
 genBindLocal(segments,gw,config)
 genFastdConfig(segments,gw,config)
 genBirdConfig(segments,gw,config)
-
+genFfrl(gw,instance,config)
 
