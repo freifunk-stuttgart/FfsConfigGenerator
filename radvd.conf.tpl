@@ -9,12 +9,7 @@ interface br${seg}
     AdvDefaultLifetime 0;
     MinDelayBetweenRAs 10;
 
-    prefix ${ipv6net}
-    {};
-
-    RDNSS ${ipv6}
-    {};
-
-${hostroutes}
+    prefix ${ipv6net} {};
+    RDNSS ${ipv6} {};
 ${netroutes}
 };

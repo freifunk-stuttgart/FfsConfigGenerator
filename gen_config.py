@@ -4,6 +4,18 @@ from netaddr import *
 import argparse
 import os
 import json
+from conans.client import configure_environment
+from IPython.core.prompts import HOSTNAME_SHORT
+from IPython.nbconvert.filters import datatypefilter
+
+interfaces = {}
+interfaces["bb-a-ak-ber"] =  ("185.66.195.0","100.64.8.164","100.64.8.165","2a03:2260:0:46f::2")
+interfaces["bb-b-ak-ber"] = ("185.66.195.1","100.64.8.170","100.64.8.171","2a03:2260:0:472::2")
+interfaces["bb-a-ix-dus"] = ("185.66.193.0","100.64.8.168","100.64.8.169","2a03:2260:0:471::2")
+interfaces["bb-b-ix-dus"] = ("185.66.193.1","100.64.8.174","100.64.8.175","2a03:2260:0:474::2")
+interfaces["bb-a-fra2-fra"] = ("185.66.194.0","100.64.8.166","100.64.8.167","2a03:2260:0:470::2")
+interfaces["bb-b-fra2-fra"] = ("185.66.194.1","100.64.8.172","100.64.8.173","2a03:2260:0:473::2")
+
 
 def getGwList(config):
     result = []
@@ -12,19 +24,43 @@ def getGwList(config):
         result.append("gw%02dn%02d"%(int(s[0]),int(s[1])))
     return result
 
+def genBirdBgpMain(gw,instance,config):
+    if not "ffrl_ipv4" in config['gws']["%i,%i"%(gw,instance)]:
+        return ""
+    natv4 = config['gws']["%i,%i"%(gw,instance)]["ffrl_ipv4"]
+    with open("bird_bgp_main.conf.tpl","rb") as fp:
+        tmpl = Template(fp.read())
+    return tmpl.substitute(NAT_V4=natv4)
+
+def genBirdBgpPeers(gw,instance,config):
+    if not "ffrl_ipv4" in config['gws']["%i,%i"%(gw,instance)]:
+        return ""
+    with open("bird_bgp_peers.conf.tpl","rb") as fp:
+        tmpl = Template(fp.read())
+    data = ""
+    for interface in interfaces:
+        i = interfaces[interface]
+        
+        data += tmpl.substitute(IFACE=interface.replace("-","_"),
+                                TUN_LOCAL_V4=i[2],
+                                TUN_REMOTE_V4=i[1])
+    
+    return data
+
+def genCollectd(gw,instance,config):
+    with open("collectd.conf.tpl","rb") as fp:
+        tmpl = Template(fp.read())
+    hostname = "gw%02in%02i"%(gw,instance)
+    data = tmpl.substitute(HOSTNAME=hostname)
+    md("etc/collectd")
+    with open("etc/collectd/collectd.conf","wb") as fp:
+        fp.write(data)
+    
 def genFfrl(gw, instance,config):
     if not "ffrl_ipv4" in config['gws']["%i,%i"%(gw,instance)]:
         return
-    fp = open("ffrl.tpl","rb")
-    tmpl = Template(fp.read())
-    fp.close()
-    interfaces = {}
-    interfaces["bb-a.ak.ber"] =  ("89.163.131.200","100.64.8.164","100.64.8.165","2a03:2260:0:46f::2/64")
-    interfaces["bb-a.fra2.fra"] = ("89.163.131.200","100.64.8.166","100.64.8.167","2a03:2260:0:470::2")
-    interfaces["bb-a.ix.dus"] = ("89.163.131.200","100.64.8.168","100.64.8.169","2a03:2260:0:471::2")
-    interfaces["bb-b.ak.ber"] = ("89.163.131.200","100.64.8.170","100.64.8.171","2a03:2260:0:472::2")
-    interfaces["bb-b.fra2.fra"] = ("89.163.131.200","100.64.8.172","100.64.8.173","2a03:2260:0:473::2")
-    interfaces["bb-b.ix.dus"] = ("89.163.131.200","100.64.8.174","100.64.8.175","2a03:2260:0:474::2")
+    with open("ffrl.tpl","rb") as fp:
+        tmpl = Template(fp.read())
     data = ""
     for interface in interfaces:
         i = interfaces[interface]
@@ -71,9 +107,8 @@ def gen_ffsbb(gw, instance, config):
     fp.close()
 
 def genNetwork(segments, gw,config):
-    fp = open("ffs-gw.tpl","rb")
-    tmpl = Template(fp.read())
-    fp.close()
+    with open("ffs-gw.tpl","rb") as fp:
+        tmpl = Template(fp.read())
     md("etc/network")
     md("etc/network/interfaces.d")
     for seg in segments:
@@ -90,37 +125,39 @@ def genNetwork(segments, gw,config):
             ipv4 = config["gws"]["%s"%(gw)]["legacyipv4"]
         else:
             if instance == 0:
-		ipv4 = str(ip.network+gw)
+                ipv4 = str(ip.network+gw)
             else:
-		ipv4 = str(ip.network+gw*10+instance)
+                ipv4 = str(ip.network+gw*10+instance)
         inst = tmpl.substitute(gw="%02i"%(gw),seg=seg,ipv4=ipv4,ipv4net=ip,ipv4netmask=ipv4netmask,ipv6=ipv6,ipv6net=ipv6net,instance="%02i"%(instance))
-        fp = open("etc/network/interfaces.d/ffs-seg%s"%(seg), "wb")
-        fp.write(inst)
-        fp.close()
-        ip = IPNetwork(str(ip.broadcast+1)+"/18")
+        with open("etc/network/interfaces.d/ffs-seg%s"%(seg), "wb") as fp:
+            fp.write(inst)
+        #ip = IPNetwork(str(ip.broadcast+1)+"/18")
 
 
 def genRadvd(segments, gw,config):
-    fp = open("radvd.conf.tpl")
-    tpl = Template(fp.read())
-    fp.close()
+    with open("radvd.conf.tpl") as fp:
+        tpl = Template(fp.read())
     fp = open("etc/radvd.conf","wb")
-    hostroutes = "    route fd21:b4dc:4b00::/64\n    {\n    };\n"
-    for seg in segments:
-        netroutes = ""
-        for netroute in segments:
-            if netroute != seg:
-                ipv6net = IPNetwork(config["segments"][netroute]["ipv6network"])
-                netroutes += "    route %s\n    {\n    };\n\n"%(ipv6net) 
+    data = ""
+    segments_sorted = segments
+    segments_sorted.sort()
+    for seg in segments_sorted:
+        if seg == "00":
+            continue
+        netroutes = "    route fd21:b4dc:4b00::/40 { };"
         ipv6net = IPNetwork(config["segments"][seg]["ipv6network"])
         if instance == 0:
             ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw))
         else:
             ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw*100+instance))
 
-        inst = tpl.substitute(gw="%02i"%(gw),seg=seg,ipv6=ipv6,ipv6net=ipv6net,hostroutes=hostroutes,netroutes=netroutes)
-        fp.write(inst)
-    fp.close()
+        inst = tpl.substitute(gw="%02i"%(gw),seg=seg,ipv6=ipv6,ipv6net=ipv6net,netroutes=netroutes)
+        data += inst
+        data +="\n"
+
+    with open("etc/radvd.conf","wb") as fp:
+        fp.write(data)
+
 
 def genDhcp(segments, gw,config):
     fp = open("dhcpd.conf.tpl")
@@ -244,16 +281,22 @@ def genFastdConfig(segments,gw,config):
         fp.write(inst)
         fp.close()
 
-def genBirdConfig(segments,gw,config):
-    fp = open("bird.conf.tpl","rb")
-    tlp = Template(fp.read())
-    fp.close()
+def genBirdConfig(segments,gw,instance,config):
+    with open("bird.conf.tpl","rb") as fp:
+        tlp = Template(fp.read())
+    data = ""
     router_id = "10.191.255.%s"%(gw+(instance*10))    
-    if not os.path.exists("etc/bird"):
-        os.mkdir("etc/bird")
+    md("etc/bird")
+
     inst = tlp.substitute(router_id=router_id)
-    fp = open("etc/bird/bird.conf","wb")
-    fp.write(inst)
+    data += inst
+    data += genBirdBgpMain(gw,instance,config)
+    data += genBirdBgpPeers(gw,instance,config)
+    
+    
+    with open("etc/bird/bird.conf","wb") as fp:
+        fp.write(data)
+    
 
     fp.close()
     fp = open("bird6.conf.tpl","rb")
@@ -293,6 +336,7 @@ genRadvd(segments,gw,config)
 genBindOptions(segments,gw,config)
 genBindLocal(segments,gw,config)
 genFastdConfig(segments,gw,config)
-genBirdConfig(segments,gw,config)
+genBirdConfig(segments,gw,instance,config)
 genFfrl(gw,instance,config)
-
+genBirdBgpPeers(gw,instance,config)
+genCollectd(gw,instance,config)
