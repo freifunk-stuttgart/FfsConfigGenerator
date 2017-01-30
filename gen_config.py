@@ -282,10 +282,15 @@ def genFastdConfig(segments,gw,config):
         fp.close()
 
 def genBirdConfig(segments,gw,instance,config):
+
+    if instance == 0:
+        router_id = "10.191.255.%s"%(gw)
+    else:
+        router_id = "10.191.255.%s"%((gw*10)+instance)
+
     with open("bird.conf.tpl","rb") as fp:
         tlp = Template(fp.read())
     data = ""
-    router_id = "10.191.255.%s"%(gw+(instance*10))    
     md("etc/bird")
 
     inst = tlp.substitute(router_id=router_id)
@@ -293,24 +298,16 @@ def genBirdConfig(segments,gw,instance,config):
     data += genBirdBgpMain(gw,instance,config)
     data += genBirdBgpPeers(gw,instance,config)
     
-    
     with open("etc/bird/bird.conf","wb") as fp:
         fp.write(data)
+
+    with open("bird6.conf.tpl","rb") as fp:
+        tlp = Template(fp.read())
     
-
-    fp.close()
-    fp = open("bird6.conf.tpl","rb")
-    tlp = Template(fp.read())
-    fp.close()
-    router_id = "10.191.255.%s"%(gw+(instance*10))    
-    if not os.path.exists("etc/bird"):
-        os.mkdir("etc/bird")
     inst = tlp.substitute(router_id=router_id)
-    fp = open("etc/bird/bird6.conf","wb")
-    fp.write(inst)
-    fp.close()
 
-
+    with open("etc/bird/bird6.conf","wb") as fp:
+        fp.write(inst)
     
 def md(d):
     if not os.path.exists(d):
