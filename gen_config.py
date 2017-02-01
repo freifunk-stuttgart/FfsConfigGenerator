@@ -4,9 +4,6 @@ from netaddr import *
 import argparse
 import os
 import json
-from conans.client import configure_environment
-from IPython.core.prompts import HOSTNAME_SHORT
-from IPython.nbconvert.filters import datatypefilter
 
 interfaces = {}
 interfaces["bb-a-ak-ber"] =  ("185.66.195.0","100.64.8.164","100.64.8.165","2a03:2260:0:46f::2")
