@@ -4,9 +4,6 @@ from netaddr import *
 import argparse
 import os
 import json
-from conans.client import configure_environment
-from IPython.core.prompts import HOSTNAME_SHORT
-from IPython.nbconvert.filters import datatypefilter
 
 interfaces = {}
 interfaces["bb-a-ak-ber"] =  ("185.66.195.0","100.64.8.164","100.64.8.165","2a03:2260:0:46f::2")
@@ -105,8 +102,12 @@ def gen_ffsbb(gw, instance, config):
     with open("etc/network/interfaces.d/ffsbb","wb") as fp:
         fp.write(inst)
 
-def genNetwork(segments, gw,config):
-    with open("ffs-gw.tpl","rb") as fp:
+def genNetwork(segments, gw, config, nobridge):
+    if nobridge == True:
+        templatefile="ffs-gw-no-bridge.tpl"
+    else:
+        templatefile="ffs-gw.tpl"
+    with open(templatefile,"rb") as fp:
         tmpl = Template(fp.read())
     md("etc/network")
     md("etc/network/interfaces.d")
@@ -282,7 +283,7 @@ def md(d):
 parser = argparse.ArgumentParser(description='Generate Configuration for Freifunk Gateway')
 parser.add_argument('--gwnum', dest='GWNUM', action='store', required=True,help='Config will be generated for this gateway')
 parser.add_argument('--instance', dest='INSTANCE', action='store', required=True,help='Config will be generated for this instance of a gateway')
-
+parser.add_argument('--no-bridge', dest='NOBRIDGE', action='store_true', required=False,help='Create network without bridges, direct batman only')
 args = parser.parse_args()
 
 
@@ -293,7 +294,7 @@ with open("config.json","rb") as fp:
     config = json.load(fp)
 segments = config["segments"].keys()
 gen_ffsbb(gw,instance,config)
-genNetwork(segments,gw,config)
+genNetwork(segments,gw,config,args.NOBRIDGE)
 genRadvd(segments,gw,config)
 genBindOptions(segments,gw,config)
 genBindLocal(segments,gw,config)
