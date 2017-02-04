@@ -103,8 +103,12 @@ def gen_ffsbb(gw, instance, config):
     fp.write(inst)
     fp.close()
 
-def genNetwork(segments, gw,config):
-    with open("ffs-gw.tpl","rb") as fp:
+def genNetwork(segments, gw, config, nobridge):
+    if nobridge == True:
+        templatefile="ffs-gw-no-bridge.tpl"
+    else:
+        templatefile="ffs-gw.tpl"
+    with open(templatefile,"rb") as fp:
         tmpl = Template(fp.read())
     md("etc/network")
     md("etc/network/interfaces.d")
@@ -313,6 +317,7 @@ def md(d):
 parser = argparse.ArgumentParser(description='Generate Configuration for Freifunk Gateway')
 parser.add_argument('--gwnum', dest='GWNUM', action='store', required=True,help='Config will be generated for this gateway')
 parser.add_argument('--instance', dest='INSTANCE', action='store', required=True,help='Config will be generated for this instance of a gateway')
+parser.add_argument('--no-bridge', dest='NOBRIDGE', action='store_true', required=False,help='Create network without bridges, direct batman only')
 args = parser.parse_args()
 
 
@@ -324,7 +329,7 @@ config = json.load(fp)
 fp.close()
 segments = config["segments"].keys()
 gen_ffsbb(gw,instance,config)
-genNetwork(segments,gw,config)
+genNetwork(segments,gw,config,args.NOBRIDGE)
 genRadvd(segments,gw,config)
 #genDhcp(segments,gw,config)
 genBindOptions(segments,gw,config)
