@@ -102,9 +102,8 @@ def gen_ffsbb(gw, instance, config):
     idv6 = instance*100+gw 
     
     inst = tmpl.substitute(idv4=idv4,idv6=idv6)
-    fp = open("etc/network/interfaces.d/ffsbb","wb")
-    fp.write(inst)
-    fp.close()
+    with open("etc/network/interfaces.d/ffsbb","wb") as fp:
+        fp.write(inst)
 
 def genNetwork(segments, gw,config):
     with open("ffs-gw.tpl","rb") as fp:
@@ -159,39 +158,6 @@ def genRadvd(segments, gw,config):
         fp.write(data)
 
 
-def genDhcp(segments, gw,config):
-    fp = open("dhcpd.conf.tpl")
-    tpl = Template(fp.read())
-    fp.close()
-    fp = open("dhcpd.conf.head")
-    head = fp.read()
-    fp.close()
-    md("etc/dhcp")
-
-    fp = open("etc/dhcp/dhcpd.conf","wb")
-    fp.write(head)
-
-    for seg in segments:
-        ip = IPNetwork(config["segments"][seg]["ipv4network"])
-        ipv4net = str(ip.network)
-        if seg == "00":
-            ipv4gw = config["gws"]["%s"%(gw)]["legacyipv4"]
-            ipv4start = config["gws"]["%s"%(gw)]["ipv4start"]
-            ipv4end = config["gws"]["%s"%(gw)]["ipv4end"]
-        else:
-            ipv4gw = str(ip.network+gw)
-
-            dhcp_ipnet = IPNetwork("%s/21"%(ip.network))
-            for  i in range(1,gw):
-                dhcp_ipnet = dhcp_ipnet.next()
-        
-            ipv4start = str(dhcp_ipnet.network+257)
-            ipv4end = str(dhcp_ipnet.broadcast-1)
-        
-        inst = tpl.substitute(ipv4start=ipv4start,ipv4end=ipv4end,ipv4net=ipv4net,ipv4gw=ipv4gw)
-        fp.write(inst)
-        ip = ip.next()
-    fp.close()
 
 def genBindOptions(segments,gw,config):
     fp = open("named.conf.options.tpl","rb")
@@ -316,20 +282,19 @@ def md(d):
 parser = argparse.ArgumentParser(description='Generate Configuration for Freifunk Gateway')
 parser.add_argument('--gwnum', dest='GWNUM', action='store', required=True,help='Config will be generated for this gateway')
 parser.add_argument('--instance', dest='INSTANCE', action='store', required=True,help='Config will be generated for this instance of a gateway')
+
 args = parser.parse_args()
 
 
 gw=int(args.GWNUM)
 instance=int(args.INSTANCE)
 md("etc")
-fp = open("config.json","rb")
-config = json.load(fp)
-fp.close()
+with open("config.json","rb") as fp:
+    config = json.load(fp)
 segments = config["segments"].keys()
 gen_ffsbb(gw,instance,config)
 genNetwork(segments,gw,config)
 genRadvd(segments,gw,config)
-#genDhcp(segments,gw,config)
 genBindOptions(segments,gw,config)
 genBindLocal(segments,gw,config)
 genFastdConfig(segments,gw,config)

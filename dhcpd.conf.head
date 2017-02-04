@@ -1,9 +1,15 @@
 ddns-update-style none;
 
-default-lease-time 300;
-max-lease-time 300;
+default-lease-time 600;
+max-lease-time 600;
 
-log-facility local7;
-#log-facility local6;
+log-facility local0;
 
+if (packet(24, 4) != 00:00:00:00) {
+    set last_giaddr = packet(24, 4);
+}
+
+option space freifunk;
+option freifunk-encapsulation code 82 = encapsulate freifunk;
+option freifunk.server-id code 11 = { unsigned integer 8, unsigned integer 8, unsigned integer 8, unsigned integer 8, unsigned integer 8 };
 

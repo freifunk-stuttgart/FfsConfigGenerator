@@ -1,7 +1,7 @@
 auto br${seg}
 iface br${seg} inet static
     hwaddress 02:00:39:${seg}:${gw}:${instance}
-    bridge_ports none
+    #bridge_ports none
     bridge_fd 0
     bridge_maxwait 0
     bridge_hw 02:00:39:${seg}:${gw}:${instance}

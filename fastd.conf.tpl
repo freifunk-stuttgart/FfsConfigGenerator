@@ -6,7 +6,7 @@ method "salsa2012+umac";
 ${bindv4}
 ${bindv6}
 
-include "secret.conf";
+include "../secret_vpn${segext}.conf";
 mtu 1406; # 1492 - IPv4/IPv6 Header - fastd Header...
 on verify "/root/freifunk/unclaimed.py";
 status socket "/var/run/fastd-vpn${seg}${segext}.sock";
