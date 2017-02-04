@@ -13,3 +13,4 @@ option space freifunk;
 option freifunk-encapsulation code 82 = encapsulate freifunk;
 option freifunk.server-id code 11 = { unsigned integer 8, unsigned integer 8, unsigned integer 8, unsigned integer 8, unsigned integer 8 };
 
+subnet 10.191.255.0 netmask 255.255.255.0 {}

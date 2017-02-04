@@ -3,7 +3,7 @@ subnet ${ipv4net} netmask ${netmask} {
     authoritative;
     pool
     {
-     range 1${ipv4start} ${ipv4end};
+     range ${ipv4start} ${ipv4end};
      allow all clients;
     }
     option routers ${ipv4gw};
