@@ -96,7 +96,7 @@ def gen_ffsbb(gw, instance, config):
         idv4 = gw
     else:
         idv4 = gw*10+instance
-    idv6 = instance*100+gw 
+    idv6 = instance+gw*100 
     
     inst = tmpl.substitute(idv4=idv4,idv6=idv6)
     with open("etc/network/interfaces.d/ffsbb","wb") as fp:
