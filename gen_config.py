@@ -223,12 +223,28 @@ def genFastdConfig(segments,gw,config):
             bindv4 = "bind %s:%i;"%(externalipv4,port)
         if not externalipv6 == None:
             bindv6 = "bind [%s]:%i;"%(externalipv6,port)
-        inst = tpl.substitute(seg=seg,segext="",bindv4=bindv4,bindv6=bindv6,group="peers")
+        inst = tpl.substitute(seg=seg,segext="",bindv4=bindv4,bindv6=bindv6,group="peers",mtu=1406,mtu_hack="")
         if not os.path.exists("etc/fastd/vpn%s"%(seg)):
             os.mkdir("etc/fastd/vpn%s"%(seg))
-        fp=open("etc/fastd/vpn%s/fastd.conf"%(seg),"wb")
-        fp.write(inst)
-        fp.close()
+        with open("etc/fastd/vpn%s/fastd.conf"%(seg),"wb") as fp:
+            fp.write(inst)
+
+    for seg in segments: #alternative MTU
+        if seg == "00":
+            continue
+        else:
+            port = int(seg)+10000 
+        bindv4 = ""
+        if not externalipv4 == None:
+            bindv4 = "bind %s:%i;"%(externalipv4,port)
+        bindv6 = ""
+        if not externalipv6 == None:
+            bindv6 = "bind [%s]:%i;"%(externalipv6,port)
+        inst = tpl.substitute(seg=seg,segext="",bindv4=bindv4,bindv6=bindv6,group="peers",mtu=1312,mtu_hack="_mtu1312")
+        if not os.path.exists("etc/fastd/vpn%s_mtu1312"%(seg)):
+            os.mkdir("etc/fastd/vpn%s_mtu1312"%(seg))
+        with open("etc/fastd/vpn%s_mtu1312/fastd.conf"%(seg),"wb") as fp:
+            fp.write(inst)
 
     for seg in segments:
         if seg == "00":
@@ -241,12 +257,11 @@ def genFastdConfig(segments,gw,config):
             bindv4 = "bind %s:%i;"%(externalipv4,port)
         if not externalipv6 == None:
             bindv6 = "bind [%s]:%i;"%(externalipv6,port)
-        inst = tpl.substitute(seg=seg,segext="bb",bindv4=bindv4,bindv6=bindv6,group="bb")
+        inst = tpl.substitute(seg=seg,segext="bb",bindv4=bindv4,bindv6=bindv6,group="bb",mtu=1406,mtu_hack="")
         if not os.path.exists("etc/fastd/vpn%sbb"%(seg)):
             os.mkdir("etc/fastd/vpn%sbb"%(seg))
-        fp=open("etc/fastd/vpn%sbb/fastd.conf"%(seg),"wb")
-        fp.write(inst)
-        fp.close()
+        with open("etc/fastd/vpn%sbb/fastd.conf"%(seg),"wb") as fp:
+            fp.write(inst)
 
 def genBirdConfig(segments,gw,instance,config):
 

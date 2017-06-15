@@ -105,7 +105,8 @@
             "legacyipv4": "172.21.4.1",
             "legacyipv6": "fd21:b4dc:4b1e::a38:1",
             "ipv4start" : "172.21.4.11",
-            "ipv4end"   : "172.21.7.254"
+            "ipv4end"   : "172.21.7.254",
+            "clientvpn" : false
         },
         "1,1":
         {
@@ -120,7 +121,8 @@
         {
             "externalipv6": "2001:4ba0:fff1:f8:26b:2727:103a:8a4c",
             "externalipv4": "89.163.131.200",
-            "ffrl_ipv4": "185.66.193.56"
+            "ffrl_ipv4": "185.66.193.56",
+            "altmtu"   : true
         },
         "5,1":
         {
