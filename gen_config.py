@@ -5,13 +5,23 @@ import argparse
 import os
 import json
 
-interfaces = {}
-interfaces["bb-a-ak-ber"] =  ("185.66.195.0","100.64.8.164","100.64.8.165","2a03:2260:0:46f::2")
-interfaces["bb-b-ak-ber"] = ("185.66.195.1","100.64.8.170","100.64.8.171","2a03:2260:0:472::2")
-interfaces["bb-a-ix-dus"] = ("185.66.193.0","100.64.8.168","100.64.8.169","2a03:2260:0:471::2")
-interfaces["bb-b-ix-dus"] = ("185.66.193.1","100.64.8.174","100.64.8.175","2a03:2260:0:474::2")
-interfaces["bb-a-fra2-fra"] = ("185.66.194.0","100.64.8.166","100.64.8.167","2a03:2260:0:470::2")
-interfaces["bb-b-fra2-fra"] = ("185.66.194.1","100.64.8.172","100.64.8.173","2a03:2260:0:473::2")
+#interfaces = {}
+ffrlEndpoints = {}
+
+#interfaces["bb-a-ak-ber"] =  ("185.66.195.0","100.64.8.164","100.64.8.165","2a03:2260:0:46f::2")
+#interfaces["bb-b-ak-ber"] = ("185.66.195.1","100.64.8.170","100.64.8.171","2a03:2260:0:472::2")
+#interfaces["bb-a-ix-dus"] = ("185.66.193.0","100.64.8.168","100.64.8.169","2a03:2260:0:471::2")
+#interfaces["bb-b-ix-dus"] = ("185.66.193.1","100.64.8.174","100.64.8.175","2a03:2260:0:474::2")
+#interfaces["bb-a-fra2-fra"] = ("185.66.194.0","100.64.8.166","100.64.8.167","2a03:2260:0:470::2")
+#interfaces["bb-b-fra2-fra"] = ("185.66.194.1","100.64.8.172","100.64.8.173","2a03:2260:0:473::2")
+
+ffrlEndpoints["bb-a-ak-ber"] =  "185.66.195.0"
+ffrlEndpoints["bb-b-ak-ber"] = "185.66.195.1"
+ffrlEndpoints["bb-a-ix-dus"] = "185.66.193.0"
+ffrlEndpoints["bb-b-ix-dus"] = "185.66.193.1"
+ffrlEndpoints["bb-a-fra2-fra"] = "185.66.194.0"
+ffrlEndpoints["bb-b-fra2-fra"] = "185.66.194.1"
+
 
 
 def getGwList(config):
@@ -35,12 +45,12 @@ def genBirdBgpPeers(gw,instance,config):
     with open("bird_bgp_peers.conf.tpl","rb") as fp:
         tmpl = Template(fp.read())
     data = ""
-    for interface in interfaces:
-        i = interfaces[interface]
+    for ep in ffrlEndpoints:
+        #i = interfaces[interface]
         
-        data += tmpl.substitute(IFACE=interface.replace("-","_"),
-                                TUN_LOCAL_V4=i[2],
-                                TUN_REMOTE_V4=i[1])
+        data += tmpl.substitute(IFACE=ep.replace("-","_"),
+                                TUN_LOCAL_V4=str(IPAddress(config['gws']["%i,%i"%(gw,instance)]["ffrlv4"][ep])+1),
+                                TUN_REMOTE_V4=str(IPAddress(config['gws']["%i,%i"%(gw,instance)]["ffrlv4"][ep])))
     
     return data
 
@@ -59,15 +69,15 @@ def genFfrl(gw, instance,config):
     with open("ffrl.tpl","rb") as fp:
         tmpl = Template(fp.read())
     data = ""
-    for interface in interfaces:
-        i = interfaces[interface]
+    for ep in ffrlEndpoints:
+        #i = interfaces[ep]
         localv4 = config['gws']["%i,%i"%(gw,instance)]["externalipv4"]
         natv4 = config['gws']["%i,%i"%(gw,instance)]["ffrl_ipv4"]
-        data += tmpl.substitute(IFACE=interface,
-                                TUN_LOCAL_V4=i[2],
-                                TUN_REMOTE_V4=i[1],
-                                TUN_LOCAL_V6=i[3],
-                                GRE_REMOTE=i[0],
+        data += tmpl.substitute(IFACE=ep,
+                                TUN_LOCAL_V4=str(IPAddress(config['gws']["%i,%i"%(gw,instance)]["ffrlv4"][ep])+1),
+                                TUN_REMOTE_V4=config['gws']["%i,%i"%(gw,instance)]["ffrlv4"][ep],
+                                TUN_LOCAL_V6=str(IPAddress(config['gws']["%i,%i"%(gw,instance)]["ffrlv6"][ep])+1),
+                                GRE_REMOTE=ffrlEndpoints[ep],
                                 GRE_LOCAL=localv4,
                                 NAT_V4=natv4)
     
@@ -280,6 +290,12 @@ def genBirdConfig(segments,gw,instance,config):
     data += genBirdBgpMain(gw,instance,config)
     data += genBirdBgpPeers(gw,instance,config)
     
+    dataFfrl = genBirdBgpMain(gw,instance,config)
+    dataFfrl+=genBirdBgpPeers(gw,instance,config)
+    
+    with open("etc/bird/ffrl.conf","w") as fp:
+        fp.write(dataFfrl)
+    
     with open("etc/bird/bird.conf","wb") as fp:
         fp.write(data)
 
@@ -290,7 +306,7 @@ def genBirdConfig(segments,gw,instance,config):
 
     with open("etc/bird/bird6.conf","wb") as fp:
         fp.write(inst)
-    
+
 def md(d):
     if not os.path.exists(d):
         os.mkdir(d)
