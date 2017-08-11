@@ -233,7 +233,7 @@ def genFastdConfig(segments,gw,config):
             bindv4 = "bind %s:%i;"%(externalipv4,port)
         if not externalipv6 == None:
             bindv6 = "bind [%s]:%i;"%(externalipv6,port)
-        inst = tpl.substitute(seg=seg,segext="",bindv4=bindv4,bindv6=bindv6,group="peers",mtu=1406,mtu_hack="")
+        inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group="peers",scope="vpn",mtu=1406,mtu_hack="")
         if not os.path.exists("etc/fastd/vpn%s"%(seg)):
             os.mkdir("etc/fastd/vpn%s"%(seg))
         with open("etc/fastd/vpn%s/fastd.conf"%(seg),"wb") as fp:
@@ -250,7 +250,7 @@ def genFastdConfig(segments,gw,config):
         bindv6 = ""
         if not externalipv6 == None:
             bindv6 = "bind [%s]:%i;"%(externalipv6,port)
-        inst = tpl.substitute(seg=seg,segext="",bindv4=bindv4,bindv6=bindv6,group="peers",mtu=1312,mtu_hack="_mtu1312")
+        inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group="peers",scope="vpn",mtu=1312,mtu_hack="_mtu1312")
         if not os.path.exists("etc/fastd/vpn%s_mtu1312"%(seg)):
             os.mkdir("etc/fastd/vpn%s_mtu1312"%(seg))
         with open("etc/fastd/vpn%s_mtu1312/fastd.conf"%(seg),"wb") as fp:
@@ -267,10 +267,10 @@ def genFastdConfig(segments,gw,config):
             bindv4 = "bind %s:%i;"%(externalipv4,port)
         if not externalipv6 == None:
             bindv6 = "bind [%s]:%i;"%(externalipv6,port)
-        inst = tpl.substitute(seg=seg,segext="bb",bindv4=bindv4,bindv6=bindv6,group="bb",mtu=1406,mtu_hack="")
-        if not os.path.exists("etc/fastd/vpn%sbb"%(seg)):
-            os.mkdir("etc/fastd/vpn%sbb"%(seg))
-        with open("etc/fastd/vpn%sbb/fastd.conf"%(seg),"wb") as fp:
+        inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group="bb",scope="bb",mtu=1406,mtu_hack="")
+        if not os.path.exists("etc/fastd/bb%s"%(seg)):
+            os.mkdir("etc/fastd/bb%s"%(seg))
+        with open("etc/fastd/bb%s/fastd.conf"%(seg),"wb") as fp:
             fp.write(inst)
 
 def genBirdConfig(segments,gw,instance,config):

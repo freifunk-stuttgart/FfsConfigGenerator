@@ -9,6 +9,7 @@ iface tun-${IFACE} inet tunnel
     ttl 64
     mtu 1400
     post-up /sbin/ip addr add ${NAT_V4}/32 dev $$IFACE  || true
+    post-up echo 500000  > /proc/sys/net/netfilter/nf_conntrack_max || true
 
 iface tun-${IFACE} inet6 static
     address ${TUN_LOCAL_V6}/64

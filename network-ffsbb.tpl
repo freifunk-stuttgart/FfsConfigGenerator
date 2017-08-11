@@ -1,5 +1,4 @@
 allow-hotplug ffsbb
-auto ffsbb
 iface ffsbb inet static
     up ip l set dev $$IFACE up
     address 10.191.255.${idv4}/24    # Z.B. 10.191.255.10
