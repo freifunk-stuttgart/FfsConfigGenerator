@@ -233,13 +233,14 @@ def genFastdConfig(segments,gw,config):
             bindv4 = "bind %s:%i;"%(externalipv4,port)
         if not externalipv6 == None:
             bindv6 = "bind [%s]:%i;"%(externalipv6,port)
-        inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group="peers",scope="vpn",mtu=1406,mtu_hack="")
+        inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group="peers",scope="vpn",mtu=1406)
         if not os.path.exists("etc/fastd/vpn%s"%(seg)):
             os.mkdir("etc/fastd/vpn%s"%(seg))
         with open("etc/fastd/vpn%s/fastd.conf"%(seg),"wb") as fp:
             fp.write(inst)
 
     for seg in segments: #alternative MTU
+        scope = "vpx"
         if seg == "00":
             continue
         else:
@@ -250,10 +251,10 @@ def genFastdConfig(segments,gw,config):
         bindv6 = ""
         if not externalipv6 == None:
             bindv6 = "bind [%s]:%i;"%(externalipv6,port)
-        inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group="peers",scope="vpn",mtu=1312,mtu_hack="_mtu1312")
-        if not os.path.exists("etc/fastd/vpn%s_mtu1312"%(seg)):
-            os.mkdir("etc/fastd/vpn%s_mtu1312"%(seg))
-        with open("etc/fastd/vpn%s_mtu1312/fastd.conf"%(seg),"wb") as fp:
+        inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group="peers",scope=scope,mtu=1312)
+        if not os.path.exists("etc/fastd/%s%s"%(scope,seg)):
+            os.mkdir("etc/fastd/%s%s"%(scope,seg))
+        with open("etc/fastd/%s%s/fastd.conf"%(scope,seg),"wb") as fp:
             fp.write(inst)
 
     for seg in segments:
@@ -267,7 +268,7 @@ def genFastdConfig(segments,gw,config):
             bindv4 = "bind %s:%i;"%(externalipv4,port)
         if not externalipv6 == None:
             bindv6 = "bind [%s]:%i;"%(externalipv6,port)
-        inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group="bb",scope="bb",mtu=1406,mtu_hack="")
+        inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group="bb",scope="bb",mtu=1406)
         if not os.path.exists("etc/fastd/bb%s"%(seg)):
             os.mkdir("etc/fastd/bb%s"%(seg))
         with open("etc/fastd/bb%s/fastd.conf"%(seg),"wb") as fp:
