@@ -36,18 +36,6 @@ iface bat${seg} inet6 manual
     pre-down        /sbin/brctl delif br${seg} $$IFACE || true
     post-up         echo 60 > /sys/devices/virtual/net/$$IFACE/mesh/hop_penalty || true
 
-allow-hotplug bax${seg}
-iface bax${seg} inet6 manual
-    pre-up          /sbin/modprobe batman-adv || true
-    post-up         /sbin/brctl addif br${seg} $$IFACE || true
-    post-up         /sbin/ip link set dev $$IFACE up || true
-    post-up         /sbin/ip link set dev $$IFACE address 02:00:33:${seg}:${gw}:${instance} || true
-    post-up         /usr/sbin/batctl -m $$IFACE it 10000 || true
-    post-up         /usr/sbin/batctl -m $$IFACE vm server || true
-    post-up         /usr/sbin/batctl -m $$IFACE gw server  96mbit/96mbit || true
-    pre-down        /sbin/brctl delif br${seg} $$IFACE || true
-    post-up         echo 60 > /sys/devices/virtual/net/$$IFACE/mesh/hop_penalty || true
-
 allow-hotplug vpn${seg}
 iface vpn${seg} inet6 manual
     hwaddress 02:00:38:${seg}:${gw}:${instance}
@@ -62,7 +50,7 @@ iface vpx${seg} inet6 manual
     pre-up          /sbin/modprobe batman_adv || true
     pre-up          /sbin/ip link set dev $$IFACE address 02:00:34:${seg}:${gw}:${instance} || true
     post-up         /sbin/ip link set dev $$IFACE up || true
-    post-up         /usr/sbin/batctl -m bax${seg} if add $$IFACE || true
+    post-up         /usr/sbin/batctl -m bat${seg} if add $$IFACE || true
 
 allow-hotplug bb${seg}
 iface bb${seg} inet6 manual
