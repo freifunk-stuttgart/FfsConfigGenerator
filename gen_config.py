@@ -5,15 +5,7 @@ import argparse
 import os
 import json
 
-#interfaces = {}
 ffrlEndpoints = {}
-
-#interfaces["bb-a-ak-ber"] =  ("185.66.195.0","100.64.8.164","100.64.8.165","2a03:2260:0:46f::2")
-#interfaces["bb-b-ak-ber"] = ("185.66.195.1","100.64.8.170","100.64.8.171","2a03:2260:0:472::2")
-#interfaces["bb-a-ix-dus"] = ("185.66.193.0","100.64.8.168","100.64.8.169","2a03:2260:0:471::2")
-#interfaces["bb-b-ix-dus"] = ("185.66.193.1","100.64.8.174","100.64.8.175","2a03:2260:0:474::2")
-#interfaces["bb-a-fra2-fra"] = ("185.66.194.0","100.64.8.166","100.64.8.167","2a03:2260:0:470::2")
-#interfaces["bb-b-fra2-fra"] = ("185.66.194.1","100.64.8.172","100.64.8.173","2a03:2260:0:473::2")
 
 ffrlEndpoints["bb-a-ak-ber"] =  "185.66.195.0"
 ffrlEndpoints["bb-b-ak-ber"] = "185.66.195.1"
@@ -21,7 +13,6 @@ ffrlEndpoints["bb-a-ix-dus"] = "185.66.193.0"
 ffrlEndpoints["bb-b-ix-dus"] = "185.66.193.1"
 ffrlEndpoints["bb-a-fra2-fra"] = "185.66.194.0"
 ffrlEndpoints["bb-b-fra2-fra"] = "185.66.194.1"
-
 
 
 def getGwList(config):
@@ -90,15 +81,13 @@ def gen_ffsbb(gw, instance, config):
     fp.close()
     md("etc/tinc")
     md("etc/tinc/ffsbb")
-    gws = ["gw01n00","gw01n01","gw05n01","gw05n02","gw05n03","gw05n04","gw08n00","gw08n01","gw08n02","gw08n03","gw08n04","gw09"]
     inst = tmpl.substitute(interface="eth0",gw="gw%02dn%02d"%(gw,instance))
-    fp = open("etc/tinc/ffsbb/tinc.conf","wb")
-    fp.write(inst)
-    fp.close()
+    with open("etc/tinc/ffsbb/tinc.conf","wb") as fp:
+        fp.write(inst)
     
-    fp = open("network-ffsbb.tpl","rb")
-    tmpl = Template(fp.read())
-    fp.close()
+    with open("network-ffsbb.tpl","rb") as fp:
+        tmpl = Template(fp.read())
+    
     md("etc/network")
     md("etc/network/interfaces.d")
 
@@ -222,40 +211,29 @@ def genFastdConfig(segments,gw,config):
 
     if not os.path.exists("etc/fastd"):
         os.mkdir("etc/fastd")
-    for seg in segments:
-        if seg == "00":
-            port = 10037
-        else:
-            port = int(seg)+10040
-        bindv4 = ""
-        bindv6 = ""
-        if not externalipv4 == None:
-            bindv4 = "bind %s:%i;"%(externalipv4,port)
-        if not externalipv6 == None:
-            bindv6 = "bind [%s]:%i;"%(externalipv6,port)
-        inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group="peers",scope="vpn",mtu=1406)
-        if not os.path.exists("etc/fastd/vpn%s"%(seg)):
-            os.mkdir("etc/fastd/vpn%s"%(seg))
-        with open("etc/fastd/vpn%s/fastd.conf"%(seg),"wb") as fp:
-            fp.write(inst)
 
-    for seg in segments: #alternative MTU
-        scope = "vpx"
-        if seg == "00":
-            continue
-        else:
-            port = int(seg)+10000 
-        bindv4 = ""
-        if not externalipv4 == None:
-            bindv4 = "bind %s:%i;"%(externalipv4,port)
-        bindv6 = ""
-        if not externalipv6 == None:
-            bindv6 = "bind [%s]:%i;"%(externalipv6,port)
-        inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group="peers",scope=scope,mtu=1312)
-        if not os.path.exists("etc/fastd/%s%s"%(scope,seg)):
-            os.mkdir("etc/fastd/%s%s"%(scope,seg))
-        with open("etc/fastd/%s%s/fastd.conf"%(scope,seg),"wb") as fp:
-            fp.write(inst)
+    for conf in (("vpn",10040,1406),("vpx",10000,1312),("vpy",10100,1340)):
+        (scope,portBase,mtu) = conf
+        for seg in segments: #alternative MTU
+            #scope = "vpx"
+            if seg == "00":
+                if scope=="vpn":
+                    port = portBase-3
+                else:
+                    continue
+            else:
+                port = int(seg)+portBase 
+            bindv4 = ""
+            if not externalipv4 == None:
+                bindv4 = "bind %s:%i;"%(externalipv4,port)
+            bindv6 = ""
+            if not externalipv6 == None:
+                bindv6 = "bind [%s]:%i;"%(externalipv6,port)
+            inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group="peers",scope=scope,mtu=mtu)
+            if not os.path.exists("etc/fastd/%s%s"%(scope,seg)):
+                os.mkdir("etc/fastd/%s%s"%(scope,seg))
+            with open("etc/fastd/%s%s/fastd.conf"%(scope,seg),"wb") as fp:
+                fp.write(inst)
 
     for seg in segments:
         if seg == "00":
