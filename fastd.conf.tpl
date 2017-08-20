@@ -8,11 +8,9 @@ method "null+salsa2012+umac";
 ${bindv4}
 ${bindv6}
 
-include "../secret_${scope}.conf";
+include "../secret_${group}.conf";
 mtu ${mtu}; # maxmtu - IPv4/IPv6 Header - fastd Header = ${mtu}
-on verify "/root/freifunk/unclaimed.py";
+#on verify "/root/freifunk/unclaimed.py";
 status socket "/var/run/fastd-${scope}${seg}.sock";
 
-peer group "${group}" {
-    include peers from "/etc/fastd/peers-ffs/vpn${seg}/${group}";
-}
+include peers from "/etc/fastd/peers-ffs/vpn${seg}/${group}";

@@ -51,7 +51,7 @@ def genCollectd(gw,instance,config):
     hostname = "gw%02in%02i"%(gw,instance)
     data = tmpl.substitute(HOSTNAME=hostname)
     md("etc/collectd")
-    with open("etc/collectd/collectd.conf","wb") as fp:
+    with open("etc/collectd/collectd.conf","w") as fp:
         fp.write(data)
     
 def genFfrl(gw, instance,config):
@@ -72,17 +72,17 @@ def genFfrl(gw, instance,config):
                                 GRE_LOCAL=localv4,
                                 NAT_V4=natv4)
     
-    with open("etc/network/interfaces.d/ffrl","wb") as fp:
+    with open("etc/network/interfaces.d/ffrl","w") as fp:
         fp.write(data)
 
 def gen_ffsbb(gw, instance, config):
-    fp = open("tinc.conf.tpl","rb")
-    tmpl = Template(fp.read())
-    fp.close()
+    with open("tinc.conf.tpl","rb") as fp:
+        tmpl = Template(fp.read())
+
     md("etc/tinc")
     md("etc/tinc/ffsbb")
     inst = tmpl.substitute(interface="eth0",gw="gw%02dn%02d"%(gw,instance))
-    with open("etc/tinc/ffsbb/tinc.conf","wb") as fp:
+    with open("etc/tinc/ffsbb/tinc.conf","w") as fp:
         fp.write(inst)
     
     with open("network-ffsbb.tpl","rb") as fp:
@@ -98,7 +98,7 @@ def gen_ffsbb(gw, instance, config):
     idv6 = instance+gw*100 
     
     inst = tmpl.substitute(idv4=idv4,idv6=idv6)
-    with open("etc/network/interfaces.d/ffsbb","wb") as fp:
+    with open("etc/network/interfaces.d/ffsbb","w") as fp:
         fp.write(inst)
 
 def genNetwork(segments, gw, config, nobridge):
@@ -128,7 +128,7 @@ def genNetwork(segments, gw, config, nobridge):
             else:
                 ipv4 = str(ip.network+gw*10+instance)
         inst = tmpl.substitute(gw="%02i"%(gw),seg=seg,ipv4=ipv4,ipv4net=ip,ipv4netmask=ipv4netmask,ipv6=ipv6,ipv6net=ipv6net,instance="%02i"%(instance))
-        with open("etc/network/interfaces.d/ffs-seg%s"%(seg), "wb") as fp:
+        with open("etc/network/interfaces.d/ffs-seg%s"%(seg), "w") as fp:
             fp.write(inst)
         #ip = IPNetwork(str(ip.broadcast+1)+"/18")
 
@@ -136,7 +136,7 @@ def genNetwork(segments, gw, config, nobridge):
 def genRadvd(segments, gw,config):
     with open("radvd.conf.tpl") as fp:
         tpl = Template(fp.read())
-    fp = open("etc/radvd.conf","wb")
+    fp = open("etc/radvd.conf","w")
     data = ""
     segments_sorted = segments
     segments_sorted.sort()
@@ -154,17 +154,14 @@ def genRadvd(segments, gw,config):
         data += inst
         data +="\n"
 
-    with open("etc/radvd.conf","wb") as fp:
+    with open("etc/radvd.conf","w") as fp:
         fp.write(data)
 
-
-
 def genBindOptions(segments,gw,config):
-    fp = open("named.conf.options.tpl","rb")
-    tpl = Template(fp.read())
-    fp.close()
+    with open("named.conf.options.tpl","rb") as fp:
+        tpl = Template(fp.read())
+
     md("etc/bind")
-    fp = open("etc/bind/named.conf.options","wb")
     ipv4ips = ""
     ipv6ips = ""
     if "legacyipv4" in config["gws"]["%s,%s"%(gw,instance)]:
@@ -179,14 +176,13 @@ def genBindOptions(segments,gw,config):
         ipv4ips += "%s; "%(ipv4gw)
         ipv6ips += "fd21:b4dc:4b%s::a38:%s; "%(seg,gw)
     inst = tpl.substitute(ipv4addr=ipv4ips,ipv6addr=ipv6ips)
-    fp.write(inst)
-    fp.close()
+    with open("etc/bind/named.conf.options","w") as fp:
+        fp.write(inst)
 
 def genBindLocal(segments,gw,config):
-    fp = open("named.conf.local.tpl","rb")
-    tpl = Template(fp.read())
-    fp.close()
-    fp = open("etc/bind/named.conf.local","wb")
+    with open("named.conf.local.tpl","rb") as fp:
+        tpl = Template(fp.read())
+
     ipv4net = ""
     ipv6net = ""
     for seg in segments:
@@ -195,13 +191,13 @@ def genBindLocal(segments,gw,config):
         ipv4net += "    %s;\n"%(str(ip))
         ipv6net += "    %s;\n"%(str(ipv6))
     inst = tpl.substitute(ipv4net=ipv4net,ipv6net=ipv6net)
-    fp.write(inst)
-    fp.close()
+    with open("etc/bind/named.conf.local","w") as fp:
+        fp.write(inst)
 
 def genFastdConfig(segments,gw,config):
-    fp = open("fastd.conf.tpl","rb")
-    tpl = Template(fp.read())
-    fp.close()
+    with open("fastd.conf.tpl","rb") as fp:
+        tpl = Template(fp.read())
+
     externalipv4 = None
     externalipv6 = None
     if "externalipv4" in config["gws"]["%s,%s"%(gw,instance)]:
@@ -212,10 +208,9 @@ def genFastdConfig(segments,gw,config):
     if not os.path.exists("etc/fastd"):
         os.mkdir("etc/fastd")
 
-    for conf in (("vpn",10040,1406),("vpx",10000,1312),("vpy",10100,1340)):
-        (scope,portBase,mtu) = conf
+    for conf in (("vpn",10040,1406,"peers"),("vpx",10000,1312,"peers"),("vpy",10100,1340,"peers"),("bb",9040,1406,"bb")):
+        (scope,portBase,mtu,group) = conf
         for seg in segments: #alternative MTU
-            #scope = "vpx"
             if seg == "00":
                 if scope=="vpn":
                     port = portBase-3
@@ -229,29 +224,12 @@ def genFastdConfig(segments,gw,config):
             bindv6 = ""
             if not externalipv6 == None:
                 bindv6 = "bind [%s]:%i;"%(externalipv6,port)
-            inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group="peers",scope=scope,mtu=mtu)
+            inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group=group,scope=scope,mtu=mtu)
             if not os.path.exists("etc/fastd/%s%s"%(scope,seg)):
                 os.mkdir("etc/fastd/%s%s"%(scope,seg))
-            with open("etc/fastd/%s%s/fastd.conf"%(scope,seg),"wb") as fp:
+            with open("etc/fastd/%s%s/fastd.conf"%(scope,seg),"w") as fp:
                 fp.write(inst)
-
-    for seg in segments:
-        if seg == "00":
-            port = 9037
-        else:
-            port = int(seg)+9040
-        bindv4 = ""
-        bindv6 = ""
-        if not externalipv4 == None:
-            bindv4 = "bind %s:%i;"%(externalipv4,port)
-        if not externalipv6 == None:
-            bindv6 = "bind [%s]:%i;"%(externalipv6,port)
-        inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group="bb",scope="bb",mtu=1406)
-        if not os.path.exists("etc/fastd/bb%s"%(seg)):
-            os.mkdir("etc/fastd/bb%s"%(seg))
-        with open("etc/fastd/bb%s/fastd.conf"%(seg),"wb") as fp:
-            fp.write(inst)
-
+    
 def genBirdConfig(segments,gw,instance,config):
 
     if instance == 0:
@@ -275,7 +253,7 @@ def genBirdConfig(segments,gw,instance,config):
     with open("etc/bird/ffrl.conf","w") as fp:
         fp.write(dataFfrl)
     
-    with open("etc/bird/bird.conf","wb") as fp:
+    with open("etc/bird/bird.conf","w") as fp:
         fp.write(data)
 
     with open("bird6.conf.tpl","rb") as fp:
@@ -283,7 +261,7 @@ def genBirdConfig(segments,gw,instance,config):
     
     inst = tlp.substitute(router_id=router_id)
 
-    with open("etc/bird/bird6.conf","wb") as fp:
+    with open("etc/bird/bird6.conf","w") as fp:
         fp.write(inst)
 
 def md(d):
@@ -302,6 +280,7 @@ instance=int(args.INSTANCE)
 md("etc")
 with open("config.json","rb") as fp:
     config = json.load(fp)
+
 segments = config["segments"].keys()
 gen_ffsbb(gw,instance,config)
 genNetwork(segments,gw,config,args.NOBRIDGE)
