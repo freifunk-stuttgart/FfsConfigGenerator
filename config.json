@@ -92,6 +92,81 @@
         {
             "ipv4network" : "10.190.128.0/21",
             "ipv6network" : "fd21:b4dc:4b17::/64"
+        },
+        "18":
+        {
+            "ipv4network" : "10.190.136.0/21",
+            "ipv6network" : "fd21:b4dc:4b18::/64"
+        },
+        "19":
+        {
+            "ipv4network" : "10.190.144.0/21",
+            "ipv6network" : "fd21:b4dc:4b19::/64"
+        },
+        "20":
+        {
+            "ipv4network" : "10.190.152.0/21",
+            "ipv6network" : "fd21:b4dc:4b20::/64"
+        },
+        "21":
+        {
+            "ipv4network" : "10.190.160.0/21",
+            "ipv6network" : "fd21:b4dc:4b21::/64"
+        },
+        "22":
+        {
+            "ipv4network" : "10.190.168.0/21",
+            "ipv6network" : "fd21:b4dc:4b22::/64"
+        },
+        "23":
+        {
+            "ipv4network" : "10.190.176.0/21",
+            "ipv6network" : "fd21:b4dc:4b23::/64"
+        },
+        "24":
+        {
+            "ipv4network" : "10.190.184.0/21",
+            "ipv6network" : "fd21:b4dc:4b24::/64"
+        },
+        "25":
+        {
+            "ipv4network" : "10.190.192.0/21",
+            "ipv6network" : "fd21:b4dc:4b25::/64"
+        },
+        "26":
+        {
+            "ipv4network" : "10.190.200.0/21",
+            "ipv6network" : "fd21:b4dc:4b26::/64"
+        },
+        "27":
+        {
+            "ipv4network" : "10.190.208.0/21",
+            "ipv6network" : "fd21:b4dc:4b27::/64"
+        },
+        "28":
+        {
+            "ipv4network" : "10.190.216.0/21",
+            "ipv6network" : "fd21:b4dc:4b28::/64"
+        },
+        "29":
+        {
+            "ipv4network" : "10.190.224.0/21",
+            "ipv6network" : "fd21:b4dc:4b29::/64"
+        },
+        "30":
+        {
+            "ipv4network" : "10.190.232.0/21",
+            "ipv6network" : "fd21:b4dc:4b30::/64"
+        },
+        "31":
+        {
+            "ipv4network" : "10.190.240.0/21",
+            "ipv6network" : "fd21:b4dc:4b31::/64"
+        },
+        "32":
+        {
+            "ipv4network" : "10.190.248.0/21",
+            "ipv6network" : "fd21:b4dc:4b32::/64"
         }
        
     },
@@ -110,12 +185,8 @@
         },
         "1,1":
         {
-            "externalipv4": "5.104.108.110",
-            "externalipv6": "2001:4ba0:fff1:f8::10",
-            "legacyipv4": "172.21.4.11",
-            "legacyipv6": "fd21:b4dc:4b1e::a38:11",
-            "ipv4start" : "172.21.5.11",
-            "ipv4end"   : "172.21.7.254"
+            "externalipv4": "88.198.230.6",
+            "externalipv6": "2a01:4f8:190:5205:260:2fff:feff:a939"
         },
         "1,3":
         {
