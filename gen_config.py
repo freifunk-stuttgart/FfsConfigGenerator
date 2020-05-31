@@ -26,14 +26,14 @@ def genBirdBgpMain(gw,instance,config):
     if not "ffrl_ipv4" in config['gws']["%i,%i"%(gw,instance)]:
         return ""
     natv4 = config['gws']["%i,%i"%(gw,instance)]["ffrl_ipv4"]
-    with open("bird_bgp_main.conf.tpl","rb") as fp:
+    with open("bird_bgp_main.conf.tpl","r") as fp:
         tmpl = Template(fp.read())
     return tmpl.substitute(NAT_V4=natv4)
 
 def genBirdBgpPeers(gw,instance,config):
     if not "ffrl_ipv4" in config['gws']["%i,%i"%(gw,instance)]:
         return ""
-    with open("bird_bgp_peers.conf.tpl","rb") as fp:
+    with open("bird_bgp_peers.conf.tpl","r") as fp:
         tmpl = Template(fp.read())
     data = ""
     for ep in ffrlEndpoints:
@@ -46,7 +46,7 @@ def genBirdBgpPeers(gw,instance,config):
     return data
 
 def genCollectd(gw,instance,config):
-    with open("collectd.conf.tpl","rb") as fp:
+    with open("collectd.conf.tpl","r") as fp:
         tmpl = Template(fp.read())
     hostname = "gw%02in%02i"%(gw,instance)
     data = tmpl.substitute(HOSTNAME=hostname)
@@ -57,7 +57,7 @@ def genCollectd(gw,instance,config):
 def genFfrl(gw, instance,config):
     if not "ffrl_ipv4" in config['gws']["%i,%i"%(gw,instance)]:
         return
-    with open("ffrl.tpl","rb") as fp:
+    with open("ffrl.tpl","r") as fp:
         tmpl = Template(fp.read())
     data = ""
     for ep in ffrlEndpoints:
@@ -76,7 +76,7 @@ def genFfrl(gw, instance,config):
         fp.write(data)
 
 def gen_ffsbb(gw, instance, config):
-    with open("tinc.conf.tpl","rb") as fp:
+    with open("tinc.conf.tpl","r") as fp:
         tmpl = Template(fp.read())
 
     md("etc/tinc")
@@ -85,7 +85,7 @@ def gen_ffsbb(gw, instance, config):
     with open("etc/tinc/ffsbb/tinc.conf","w") as fp:
         fp.write(inst)
     
-    with open("network-ffsbb.tpl","rb") as fp:
+    with open("network-ffsbb.tpl","r") as fp:
         tmpl = Template(fp.read())
     
     md("etc/network")
@@ -106,7 +106,7 @@ def genNetwork(segments, gw, config, nobridge):
         templatefile="ffs-gw-no-bridge.tpl"
     else:
         templatefile="ffs-gw.tpl"
-    with open(templatefile,"rb") as fp:
+    with open(templatefile,"r") as fp:
         tmpl = Template(fp.read())
     md("etc/network")
     md("etc/network/interfaces.d")
@@ -138,8 +138,7 @@ def genRadvd(segments, gw,config):
         tpl = Template(fp.read())
     fp = open("etc/radvd.conf","w")
     data = ""
-    segments_sorted = segments
-    segments_sorted.sort()
+    segments_sorted = sorted(segments)
     for seg in segments_sorted:
         if seg == "00":
             continue
@@ -158,7 +157,7 @@ def genRadvd(segments, gw,config):
         fp.write(data)
 
 def genBindOptions(segments,gw,config):
-    with open("named.conf.options.tpl","rb") as fp:
+    with open("named.conf.options.tpl","r") as fp:
         tpl = Template(fp.read())
 
     md("etc/bind")
@@ -180,7 +179,7 @@ def genBindOptions(segments,gw,config):
         fp.write(inst)
 
 def genBindLocal(segments,gw,config):
-    with open("named.conf.local.tpl","rb") as fp:
+    with open("named.conf.local.tpl","r") as fp:
         tpl = Template(fp.read())
 
     ipv4net = ""
@@ -195,7 +194,7 @@ def genBindLocal(segments,gw,config):
         fp.write(inst)
 
 def genFastdConfig(segments,gw,config):
-    with open("fastd.conf.tpl","rb") as fp:
+    with open("fastd.conf.tpl","r") as fp:
         tpl = Template(fp.read())
 
     externalipv4 = None
@@ -237,7 +236,7 @@ def genBirdConfig(segments,gw,instance,config):
     else:
         router_id = "10.191.255.%s"%((gw*10)+instance)
 
-    with open("bird.conf.tpl","rb") as fp:
+    with open("bird.conf.tpl","r") as fp:
         tlp = Template(fp.read())
     data = ""
     md("etc/bird")
@@ -256,7 +255,7 @@ def genBirdConfig(segments,gw,instance,config):
     with open("etc/bird/bird.conf","w") as fp:
         fp.write(data)
 
-    with open("bird6.conf.tpl","rb") as fp:
+    with open("bird6.conf.tpl","r") as fp:
         tlp = Template(fp.read())
     
     inst = tlp.substitute(router_id=router_id)
@@ -278,7 +277,7 @@ args = parser.parse_args()
 gw=int(args.GWNUM)
 instance=int(args.INSTANCE)
 md("etc")
-with open("config.json","rb") as fp:
+with open("config.json","r") as fp:
     config = json.load(fp)
 
 segments = config["segments"].keys()
