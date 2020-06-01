@@ -207,7 +207,7 @@ def genFastdConfig(segments,gw,config):
     if not os.path.exists("etc/fastd"):
         os.mkdir("etc/fastd")
 
-    for conf in (("vpn",10040,1406,"peers"),("vpx",10000,1312,"peers"),("vpy",10200,1340,"peers"),("bb",9040,1340,"bb")):
+    for conf in (("vpn",10200,1340,"peers"),("bb",9040,1340,"bb")):
         (scope,portBase,mtu,group) = conf
         for seg in segments: #alternative MTU
             if seg == "00":
