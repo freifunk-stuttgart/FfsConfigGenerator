@@ -219,10 +219,10 @@ def genFastdConfig(segments,gw,config):
                 port = int(seg)+portBase 
             bindv4 = ""
             if not externalipv4 == None:
-                bindv4 = "bind %s:%i;"%(externalipv4,port)
+                bindv4 = "bind 0.0.0.0:%i;"%(port)
             bindv6 = ""
             if not externalipv6 == None:
-                bindv6 = "bind [%s]:%i;"%(externalipv6,port)
+                bindv6 = "bind [::]:%i;"%(port)
             inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group=group,scope=scope,mtu=mtu)
             if not os.path.exists("etc/fastd/%s%s"%(scope,seg)):
                 os.mkdir("etc/fastd/%s%s"%(scope,seg))
