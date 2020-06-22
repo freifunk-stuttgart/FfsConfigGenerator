@@ -8,7 +8,7 @@ iface br${seg} inet static
     address ${ipv4}
     netmask ${ipv4netmask}
     pre-up          /sbin/brctl addbr $$IFACE || true
-    post-up          /usr/sbin/batctl -m bat${seg} if create || true
+    post-up          /usr/sbin/batctl meshif bat${seg} if create || true
     up              /sbin/ip address add ${ipv6}/64 dev $$IFACE || true
     post-down       /sbin/brctl delbr $$IFACE || true
     # be sure all incoming traffic is handled by the appropriate rt_table
@@ -30,8 +30,8 @@ iface bat${seg} inet6 manual
     post-up         /sbin/brctl addif br${seg} $$IFACE || true
     post-up         /sbin/ip link set dev $$IFACE up || true
     post-up         /sbin/ip link set dev $$IFACE address 02:00:39:${seg}:${gw}:${instance} || true
-    post-up         /usr/sbin/batctl -m $$IFACE it 10000 || true
-    post-up         /usr/sbin/batctl -m $$IFACE gw server  96mbit/96mbit || true
+    post-up         /usr/sbin/batctl meshif $$IFACE it 10000 || true
+    post-up         /usr/sbin/batctl meshif $$IFACE gw server  96mbit/96mbit || true
     pre-down        /sbin/brctl delif br${seg} $$IFACE || true
     post-up         echo 60 > /sys/devices/virtual/net/$$IFACE/mesh/hop_penalty || true
 
@@ -40,11 +40,11 @@ iface vpn${seg} inet6 manual
     hwaddress 02:00:33:${seg}:${gw}:${instance}
     pre-up          /sbin/ip link set dev $$IFACE address 02:00:33:${seg}:${gw}:${instance} || true
     post-up         /sbin/ip link set dev $$IFACE up || true
-    post-up         /usr/sbin/batctl -m bat${seg} if add $$IFACE || true
+    post-up         /usr/sbin/batctl meshif bat${seg} if add $$IFACE || true
 
 allow-hotplug bb${seg}
 iface bb${seg} inet6 manual
     hwaddress 02:00:35:${seg}:${gw}:${instance}
     pre-up          /sbin/ip link set dev $$IFACE address 02:00:35:${seg}:${gw}:${instance} || true
     post-up         /sbin/ip link set dev $$IFACE up || true
-    post-up         /usr/sbin/batctl -m bat${seg} if add $$IFACE || true
+    post-up         /usr/sbin/batctl meshif bat${seg} if add $$IFACE || true
