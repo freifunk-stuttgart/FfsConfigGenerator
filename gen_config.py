@@ -76,32 +76,6 @@ def genFfrl(gw, instance,config):
     with open("etc/network/interfaces.d/ffrl","w") as fp:
         fp.write(data)
 
-def gen_ffsbb(gw, instance, config):
-    with open("tinc.conf.tpl","r") as fp:
-        tmpl = Template(fp.read())
-
-    md("etc/tinc")
-    md("etc/tinc/ffsbb")
-    inst = tmpl.substitute(interface="eth0",gw="$HOST")
-    with open("etc/tinc/ffsbb/tinc.conf","w") as fp:
-        fp.write(inst)
-    
-    with open("network-ffsbb.tpl","r") as fp:
-        tmpl = Template(fp.read())
-    
-    md("etc/network")
-    md("etc/network/interfaces.d")
-
-    if instance == 0:
-        idv4 = gw
-    else:
-        idv4 = gw*10+instance
-    idv6 = instance+gw*10
-    
-    inst = tmpl.substitute(idv4=idv4,idv6=idv6)
-    with open("etc/network/interfaces.d/ffsbb","w") as fp:
-        fp.write(inst)
-
 def genNetwork(segments, gw, config, nobridge):
     if nobridge == True:
         templatefile="ffs-gw-no-bridge.tpl"
@@ -292,9 +266,6 @@ def genDhcrelayUnit(segments,gw,instance,config):
     content = """[Unit]
 Description=isc-dhcp-relay
 After=network.target
-Requires=tinc@ffsl3.service
-After=tinc@ffsl3.service
-PartOf=tinc@ffsl3.service
 
 [Service]
 Type=simple
@@ -307,32 +278,6 @@ WantedBy=multi-user.target
     md("etc/systemd")    
     md("etc/systemd/system")
     with open("etc/systemd/system/isc-dhcp-relay.service","w") as fp:
-        fp.write(content)
-
-def genTincHosts(segments,gw,instance,config):
-    routes = ""
-    for s in config["gws"]["%i,%i"%(gw,instance)]["segments"]:
-        networkV4 = config["segments"]["%02d"%(s)]["ipv4network"]
-        networkV6 = config["segments"]["%02d"%(s)]["ipv6network"]
-        ip = IPNetwork(networkV4)
-        ipv4 = str(ip.network+gw*10+instance)
-        ipv6net = IPNetwork(networkV6)
-        ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw*100+instance))
-        routes += "Subnet = %s\n"%(ipv4)
-        routes += "Subnet = %s\n"%(networkV4)
-        routes += "Subnet = %s\n"%(ipv6)
-        routes += "Subnet = %s\n"%(networkV6)
-        
-    content = """PMTUDiscovery = yes
-Digest = sha256
-ClampMSS = yes
-Address = gw01n03.freifunk-stuttgart.de
-Port = 11001
-
-%s
-"""%(routes)
-    
-    with open("tinc/ffsl3/hosts/gw%02dn%02d"%(gw,instance),"w") as fp:
         fp.write(content)
 
 def md(d):
@@ -360,8 +305,6 @@ for s in config["gws"][gwn]["segments"]:
 #segments = config["gws"][gwn]["segments"]
 genbb(segments,gw,instance,config)
 genDhcrelayUnit(segments,gw,instance,config)
-genTincHosts(segments,gw,instance,config)
-gen_ffsbb(gw,instance,config)
 genNetwork(segments,gw,config,args.NOBRIDGE)
 genRadvd(segments,gw,config)
 genBindOptions(segments,gw,config)
