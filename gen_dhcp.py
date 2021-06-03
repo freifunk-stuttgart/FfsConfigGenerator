@@ -15,6 +15,7 @@ def genDhcp(segments, dhcp,config):
     with open("dhcpd.conf.head") as fp:
         data = fp.read()
 
+    md("etc")
     md("etc/dhcp")
     segments.sort()
     for seg in segments:
