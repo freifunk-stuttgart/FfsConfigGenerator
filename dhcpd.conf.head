@@ -2,6 +2,10 @@ ddns-update-style none;
 
 default-lease-time 600;
 max-lease-time 600;
+ping-check false;
+
+allow declines;
+abandon-lease-time 300;
 
 log-facility local0;
 
@@ -12,5 +16,14 @@ if (packet(24, 4) != 00:00:00:00) {
 option space freifunk;
 option freifunk-encapsulation code 82 = encapsulate freifunk;
 option freifunk.server-id code 11 = { unsigned integer 8, unsigned integer 8, unsigned integer 8, unsigned integer 8, unsigned integer 8 };
+
+option space ubnt;
+option ubnt.unifi-address code 1 = ip-address;
+class "ubnt" {
+        match if substring (option vendor-class-identifier, 0, 4) = "ubnt";
+        option vendor-class-identifier "ubnt";
+        vendor-option-space ubnt;
+        option domain-name "freifunk-stuttgart.de";
+}
 
 subnet 10.191.255.0 netmask 255.255.255.0 {}
