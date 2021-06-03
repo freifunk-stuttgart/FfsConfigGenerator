@@ -4,8 +4,9 @@ from netaddr import *
 import argparse
 import os
 import json
+import collections
 
-ffrlEndpoints = {}
+ffrlEndpoints = collections.OrderedDict()
 
 ffrlEndpoints["bb-a-ak-ber"] =  "185.66.195.0"
 ffrlEndpoints["bb-b-ak-ber"] = "185.66.195.1"
@@ -81,7 +82,7 @@ def gen_ffsbb(gw, instance, config):
 
     md("etc/tinc")
     md("etc/tinc/ffsbb")
-    inst = tmpl.substitute(interface="eth0",gw="gw%02dn%02d"%(gw,instance))
+    inst = tmpl.substitute(interface="eth0",gw="$HOST")
     with open("etc/tinc/ffsbb/tinc.conf","w") as fp:
         fp.write(inst)
     
@@ -263,6 +264,77 @@ def genBirdConfig(segments,gw,instance,config):
     with open("etc/bird/bird6.conf","w") as fp:
         fp.write(inst)
 
+def genbb(segments,gw,instance,config):
+    for s in segments:
+        md("peers-ffs/vpn%s"%(s))
+        md("peers-ffs/vpn%s/bb"%(s))
+        fn = "peers-ffs/vpn%s/bb/gw%02dn%02ds%s"%(s,gw,instance,s)
+        hostname = "gw%02dn%02d"%(gw,instance)
+        port = 9040+int(s)
+        mac = "02:00:35:%s:%02d:%02d"%(s,gw,instance)
+        key = config["gws"][gwn]["fastd_bb_pubkey"]
+        conf = """#MAC: %s
+key "%s";
+remote "%s.gw.freifunk-stuttgart.de" port %d;
+"""%(mac,key,hostname,port)
+        
+        with open(fn,"w") as fp:
+            fp.write(conf)        
+
+
+def genDhcrelayUnit(segments,gw,instance,config):
+    
+    sample = "-id br01 -id br02 -id br03 -id br04 -id br05 -id br06 -id br07 -id br08 -id br09 -id br10 -id br11 -id br12 -id br13 -id br14 -id br15 -id br16 -id br17 -id br18 -id br19 -id br20 -id br21 -id br22 -id br23 -id br24"
+    downstreamInterfaces = ""
+    for s in config["gws"]["%i,%i"%(gw,instance)]["segments"]:
+        downstreamInterfaces +="-id br%02d"%(s)
+    
+    content = """[Unit]
+Description=isc-dhcp-relay
+After=network.target
+Requires=tinc@ffsl3.service
+After=tinc@ffsl3.service
+PartOf=tinc@ffsl3.service
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/dhcrelay -d -q -a -iu ffsbb -iu ffsl3 %s 10.191.255.251 10.191.255.252 10.191.255.253
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+"""%(downstreamInterfaces)
+    md("etc/systemd")    
+    md("etc/systemd/system")
+    with open("etc/systemd/system/isc-dhcp-relay.service","w") as fp:
+        fp.write(content)
+
+def genTincHosts(segments,gw,instance,config):
+    routes = ""
+    for s in config["gws"]["%i,%i"%(gw,instance)]["segments"]:
+        networkV4 = config["segments"]["%02d"%(s)]["ipv4network"]
+        networkV6 = config["segments"]["%02d"%(s)]["ipv6network"]
+        ip = IPNetwork(networkV4)
+        ipv4 = str(ip.network+gw*10+instance)
+        ipv6net = IPNetwork(networkV6)
+        ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw*100+instance))
+        routes += "Subnet = %s\n"%(ipv4)
+        routes += "Subnet = %s\n"%(networkV4)
+        routes += "Subnet = %s\n"%(ipv6)
+        routes += "Subnet = %s\n"%(networkV6)
+        
+    content = """PMTUDiscovery = yes
+Digest = sha256
+ClampMSS = yes
+Address = gw01n03.freifunk-stuttgart.de
+Port = 11001
+
+%s
+"""%(routes)
+    
+    with open("tinc/ffsl3/hosts/gw%02dn%02d"%(gw,instance),"w") as fp:
+        fp.write(content)
+
 def md(d):
     if not os.path.exists(d):
         os.mkdir(d)
@@ -280,7 +352,15 @@ md("etc")
 with open("config.json","r") as fp:
     config = json.load(fp)
 
-segments = config["segments"].keys()
+#segments = config["segments"].keys()
+gwn = ("%i,%i"%(gw,instance))
+segments = []
+for s in config["gws"][gwn]["segments"]:
+    segments.append("%02d"%(s))
+#segments = config["gws"][gwn]["segments"]
+genbb(segments,gw,instance,config)
+genDhcrelayUnit(segments,gw,instance,config)
+genTincHosts(segments,gw,instance,config)
 gen_ffsbb(gw,instance,config)
 genNetwork(segments,gw,config,args.NOBRIDGE)
 genRadvd(segments,gw,config)
@@ -291,3 +371,4 @@ genBirdConfig(segments,gw,instance,config)
 genFfrl(gw,instance,config)
 genBirdBgpPeers(gw,instance,config)
 genCollectd(gw,instance,config)
+print("Success")
