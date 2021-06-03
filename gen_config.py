@@ -224,7 +224,7 @@ def genBirdConfig(segments,gw,instance,config):
     dataFfrl = genBirdBgpMain(gw,instance,config)
     dataFfrl+=genBirdBgpPeers(gw,instance,config)
     
-    with open("etc/bird/ffrl.conf","w") as fp:
+    with open("etc/bird/bird_ffrl.conf","w") as fp:
         fp.write(dataFfrl)
     
     with open("etc/bird/bird.conf","w") as fp:
