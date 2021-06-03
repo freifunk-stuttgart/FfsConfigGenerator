@@ -18,6 +18,7 @@ LoadPlugin swap
 LoadPlugin uptime
 LoadPlugin users
 LoadPlugin write_graphite
+LoadPlugin conntrack
 
 <Plugin df>
 	FSType rootfs
@@ -37,6 +38,10 @@ LoadPlugin write_graphite
 		Port "2003"
 		Protocol "tcp"
 	</Node>
+</Plugin>
+
+<Plugin "write_prometheus">
+  Port "9103"
 </Plugin>
 
 <Include "/etc/collectd/collectd.conf.d">
