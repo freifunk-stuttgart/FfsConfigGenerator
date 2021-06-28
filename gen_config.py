@@ -281,8 +281,7 @@ WantedBy=multi-user.target
         fp.write(content)
 
 def md(d):
-    if not os.path.exists(d):
-        os.mkdir(d)
+    os.makedirs(d, exist_ok=True)
 
 parser = argparse.ArgumentParser(description='Generate Configuration for Freifunk Gateway')
 parser.add_argument('--gwnum', dest='GWNUM', action='store', required=True,help='Config will be generated for this gateway')
