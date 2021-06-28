@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 from string import Template
 from netaddr import *
 import argparse
