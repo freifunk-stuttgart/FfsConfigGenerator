@@ -94,7 +94,7 @@ def genNetwork(segments, gw, config, nobridge):
         if instance == 0:
             ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw))
         else:
-            ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw*10+instance))
+            ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw*100+instance))
         if seg == "00":
             ipv4 = config["gws"]["%s"%(gw)]["legacyipv4"]
         else:
