@@ -85,16 +85,25 @@ def genNetwork(segments, gw, config, nobridge):
         tmpl = Template(fp.read())
     md("etc/network")
     md("etc/network/interfaces.d")
+    publicipv6pool = IPNetwork(config["gws"]["%i,%i"%(gw,instance)]["ipv6network"])
+    publicipv6servicepool = IPNetwork(config["gws"]["%i,%i"%(gw,instance)]["ipv6servicenetwork"])
     for seg in segments:
         if seg == "00":
             continue
         ip = IPNetwork(config["segments"][seg]["ipv4network"])
         ipv4netmask=ip.netmask
         ipv6net = IPNetwork(config["segments"][seg]["ipv6network"])
+        seghex = "%02x"%int(seg, 10)
+
+
+        publicipv6net = publicipv6pool.next(int(seg,10))
+        publicipv6servicenet = publicipv6servicepool.next(int(seg,10))
         if instance == 0:
             ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw))
+            publicipv6 = publicipv6pool.ip+IPAddress("::00%s:0:0:0:%i"%(seghex,gw))
         else:
             ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw*100+instance))
+            publicipv6 = publicipv6pool.ip+IPAddress("::00%s:0:0:0:%i"%(seghex,gw*10+instance))
         if seg == "00":
             ipv4 = config["gws"]["%s"%(gw)]["legacyipv4"]
         else:
@@ -102,7 +111,7 @@ def genNetwork(segments, gw, config, nobridge):
                 ipv4 = str(ip.network+gw)
             else:
                 ipv4 = str(ip.network+gw*10+instance)
-        inst = tmpl.substitute(gw="%02i"%(gw),seg=seg,ipv4=ipv4,ipv4net=ip,ipv4netmask=ipv4netmask,ipv6=ipv6,ipv6net=ipv6net,instance="%02i"%(instance))
+        inst = tmpl.substitute(gw="%02i"%(gw),seg=seg,ipv4=ipv4,ipv4net=ip,ipv4netmask=ipv4netmask,ipv6=ipv6,ipv6net=ipv6net,publicipv6=publicipv6,publicipv6net=publicipv6net,publicipv6servicenet=publicipv6servicenet,instance="%02i"%(instance))
         with open("etc/network/interfaces.d/ffs-seg%s"%(seg), "w") as fp:
             fp.write(inst)
         #ip = IPNetwork(str(ip.broadcast+1)+"/18")

@@ -8,7 +8,9 @@ iface br${seg} inet static
     address ${ipv4}
     netmask ${ipv4netmask}
     pre-up          /sbin/brctl addbr $$IFACE || true
+    pre-up          /sbin/ip -6 rule add from 2a03:2260:3016::/48 pref 10000 lookup stuttgart || true
     up              /sbin/ip address add ${ipv6}/64 dev $$IFACE || true
+    up              /sbin/ip address add ${publicipv6}/64 dev $$IFACE || true
     post-down       /sbin/brctl delbr $$IFACE || true
     # be sure all incoming traffic is handled by the appropriate rt_table
     post-up         /sbin/ip rule add iif $$IFACE table stuttgart priority 10000 || true
@@ -22,6 +24,12 @@ iface br${seg} inet static
     # ULA route for rt_table stuttgart
     post-up         /sbin/ip -6 route add ${ipv6net} proto static dev $$IFACE table stuttgart || true
     post-down       /sbin/ip -6 route del ${ipv6net} proto static dev $$IFACE table stuttgart || true
+    post-up         /sbin/ip -6 route add ${publicipv6net} proto static dev $$IFACE table stuttgart || true
+    post-down       /sbin/ip -6 route del ${publicipv6net} proto static dev $$IFACE table stuttgart || true
+    post-up         /sbin/ip -6 route add ${publicipv6servicenet} proto static dev $$IFACE table stuttgart || true
+    post-down       /sbin/ip -6 route del ${publicipv6servicenet} proto static dev $$IFACE table stuttgart || true
+    post-up         /sbin/ip -6 route add ${publicipv6servicenet} proto static dev $$IFACE || true
+    post-down       /sbin/ip -6 route del ${publicipv6servicenet} proto static dev $$IFACE || true
     post-up         echo 4096 > /sys/devices/virtual/net/$$IFACE/bridge/hash_max || true
 
 allow-hotplug bat${seg}
