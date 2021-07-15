@@ -1,20 +1,13 @@
-#!/usr/bin/env python
-from string import Template
-from netaddr import *
+#!/usr/bin/env python3
+
 import argparse
-import os
 import json
-import collections
 
-ffrlEndpoints = collections.OrderedDict()
 
-ffrlEndpoints["bb-a-ak-ber"] =  "185.66.195.0"
-ffrlEndpoints["bb-b-ak-ber"] = "185.66.195.1"
-ffrlEndpoints["bb-a-ix-dus"] = "185.66.193.0"
-ffrlEndpoints["bb-b-ix-dus"] = "185.66.193.1"
-ffrlEndpoints["bb-a-fra2-fra"] = "185.66.194.0"
-ffrlEndpoints["bb-b-fra2-fra"] = "185.66.194.1"
-
+from gen_config_bird import *
+from gen_config_utils import *
+from gen_config_fastd import *
+from gen_config_radvd import *
 
 def getGwList(config):
     result = []
@@ -23,28 +16,6 @@ def getGwList(config):
         result.append("gw%02dn%02d"%(int(s[0]),int(s[1])))
     return result
 
-def genBirdBgpMain(gw,instance,config):
-    if not "ffrl_ipv4" in config['gws']["%i,%i"%(gw,instance)]:
-        return ""
-    natv4 = config['gws']["%i,%i"%(gw,instance)]["ffrl_ipv4"]
-    with open("bird_bgp_main.conf.tpl","r") as fp:
-        tmpl = Template(fp.read())
-    return tmpl.substitute(NAT_V4=natv4)
-
-def genBirdBgpPeers(gw,instance,config):
-    if not "ffrl_ipv4" in config['gws']["%i,%i"%(gw,instance)]:
-        return ""
-    with open("bird_bgp_peers.conf.tpl","r") as fp:
-        tmpl = Template(fp.read())
-    data = ""
-    for ep in ffrlEndpoints:
-        #i = interfaces[interface]
-        
-        data += tmpl.substitute(IFACE=ep.replace("-","_"),
-                                TUN_LOCAL_V4=str(IPAddress(config['gws']["%i,%i"%(gw,instance)]["ffrlv4"][ep])+1),
-                                TUN_REMOTE_V4=str(IPAddress(config['gws']["%i,%i"%(gw,instance)]["ffrlv4"][ep])))
-    
-    return data
 
 def genCollectd(gw,instance,config):
     with open("collectd.conf.tpl","r") as fp:
@@ -62,7 +33,6 @@ def genFfrl(gw, instance,config):
         tmpl = Template(fp.read())
     data = ""
     for ep in ffrlEndpoints:
-        #i = interfaces[ep]
         localv4 = config['gws']["%i,%i"%(gw,instance)]["externalipv4"]
         natv4 = config['gws']["%i,%i"%(gw,instance)]["ffrl_ipv4"]
         data += tmpl.substitute(IFACE=ep,
@@ -119,29 +89,6 @@ def genNetwork(segments, gw, config, nobridge):
         #ip = IPNetwork(str(ip.broadcast+1)+"/18")
 
 
-def genRadvd(segments, gw,config):
-    with open("radvd.conf.tpl") as fp:
-        tpl = Template(fp.read())
-    fp = open("etc/radvd.conf","w")
-    data = ""
-    segments_sorted = sorted(segments)
-    for seg in segments_sorted:
-        if seg == "00":
-            continue
-        netroutes = "    route fd21:b4dc:4b00::/40 { };"
-        ipv6net = IPNetwork(config["segments"][seg]["ipv6network"])
-        if instance == 0:
-            ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw))
-        else:
-            ipv6 = ipv6net.ip+IPAddress("::a38:%i"%(gw*10+instance))
-
-        inst = tpl.substitute(gw="%02i"%(gw),seg=seg,ipv6=ipv6,ipv6net=ipv6net,netroutes=netroutes)
-        data += inst
-        data +="\n"
-
-    with open("etc/radvd.conf","w") as fp:
-        fp.write(data)
-
 def genBindOptions(segments,gw,config):
     with open("named.conf.options.tpl","r") as fp:
         tpl = Template(fp.read())
@@ -179,75 +126,7 @@ def genBindLocal(segments,gw,config):
     with open("etc/bind/named.conf.local","w") as fp:
         fp.write(inst)
 
-def genFastdConfig(segments,gw,config):
-    with open("fastd.conf.tpl","r") as fp:
-        tpl = Template(fp.read())
 
-    externalipv4 = None
-    externalipv6 = None
-    if "externalipv4" in config["gws"]["%s,%s"%(gw,instance)]:
-        externalipv4 = config["gws"]["%s,%s"%(gw,instance)]["externalipv4"]
-    if "externalipv6" in config["gws"]["%s,%s"%(gw,instance)]:
-        externalipv6 = config["gws"]["%s,%s"%(gw,instance)]["externalipv6"]
-
-    if not os.path.exists("etc/fastd"):
-        os.mkdir("etc/fastd")
-
-    for conf in (("vpn",10200,1340,"peers"),("bb",9040,1340,"bb")):
-        (scope,portBase,mtu,group) = conf
-        for seg in segments: #alternative MTU
-            if seg == "00":
-                if scope=="vpn":
-                    port = portBase-3
-                else:
-                    continue
-            else:
-                port = int(seg)+portBase 
-            bindv4 = ""
-            if not externalipv4 == None:
-                bindv4 = "bind 0.0.0.0:%i;"%(port)
-            bindv6 = ""
-            if not externalipv6 == None:
-                bindv6 = "bind [::]:%i;"%(port)
-            inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group=group,scope=scope,mtu=mtu)
-            if not os.path.exists("etc/fastd/%s%s"%(scope,seg)):
-                os.mkdir("etc/fastd/%s%s"%(scope,seg))
-            with open("etc/fastd/%s%s/fastd.conf"%(scope,seg),"w") as fp:
-                fp.write(inst)
-    
-def genBirdConfig(segments,gw,instance,config):
-
-    if instance == 0:
-        router_id = "10.191.255.%s"%(gw)
-    else:
-        router_id = "10.191.255.%s"%((gw*10)+instance)
-
-    with open("bird.conf.tpl","r") as fp:
-        tlp = Template(fp.read())
-    data = ""
-    md("etc/bird")
-
-    inst = tlp.substitute(router_id=router_id)
-    data += inst
-    data += genBirdBgpMain(gw,instance,config)
-    data += genBirdBgpPeers(gw,instance,config)
-    
-    dataFfrl = genBirdBgpMain(gw,instance,config)
-    dataFfrl+=genBirdBgpPeers(gw,instance,config)
-    
-    with open("etc/bird/bird_ffrl.conf","w") as fp:
-        fp.write(dataFfrl)
-    
-    with open("etc/bird/bird.conf","w") as fp:
-        fp.write(data)
-
-    with open("bird6.conf.tpl","r") as fp:
-        tlp = Template(fp.read())
-    
-    inst = tlp.substitute(router_id=router_id)
-
-    with open("etc/bird/bird6.conf","w") as fp:
-        fp.write(inst)
 
 def genbb(segments,gw,instance,config):
     for s in segments:
@@ -291,8 +170,6 @@ WantedBy=multi-user.target
     with open("etc/systemd/system/isc-dhcp-relay.service","w") as fp:
         fp.write(content)
 
-def md(d):
-    os.makedirs(d, exist_ok=True)
 
 parser = argparse.ArgumentParser(description='Generate Configuration for Freifunk Gateway')
 parser.add_argument('--gwnum', dest='GWNUM', action='store', required=True,help='Config will be generated for this gateway')
@@ -316,12 +193,12 @@ for s in config["gws"][gwn]["segments"]:
 genbb(segments,gw,instance,config)
 genDhcrelayUnit(segments,gw,instance,config)
 genNetwork(segments,gw,config,args.NOBRIDGE)
-genRadvd(segments,gw,config)
+genRadvd(segments,gw,config,instance)
 genBindOptions(segments,gw,config)
 genBindLocal(segments,gw,config)
-genFastdConfig(segments,gw,config)
+genFastdConfig(segments,gw,config,instance)
 genBirdConfig(segments,gw,instance,config)
 genFfrl(gw,instance,config)
-genBirdBgpPeers(gw,instance,config)
+genBirdFfrlPeers(gw, instance, config)
 genCollectd(gw,instance,config)
 print("Success")
