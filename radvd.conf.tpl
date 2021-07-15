@@ -5,11 +5,10 @@ interface br${seg}
     MinRtrAdvInterval 10;
     MaxRtrAdvInterval 200;
 
-    # don't advertise default router
-    AdvDefaultLifetime 0;
+    ${AdvDefaultLifetime}
     MinDelayBetweenRAs 10;
 
     prefix ${ipv6net} {};
     RDNSS ${ipv6} {};
-${netroutes}
+${netroutes}${v6prefixes}
 };
