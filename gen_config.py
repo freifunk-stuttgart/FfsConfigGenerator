@@ -86,7 +86,9 @@ def genNetwork(segments, gw, config, nobridge):
     md("etc/network")
     md("etc/network/interfaces.d")
     publicipv6pool = IPNetwork(config["gws"]["%i,%i"%(gw,instance)]["ipv6network"])
+    publicipv6pool.prefixlen = 64
     publicipv6servicepool = IPNetwork(config["gws"]["%i,%i"%(gw,instance)]["ipv6servicenetwork"])
+    publicipv6servicepool.prefixlen = 64
     for seg in segments:
         if seg == "00":
             continue
