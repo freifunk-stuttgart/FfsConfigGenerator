@@ -1,6 +1,6 @@
 etc
 venv
 .idea
-.pyc
+*.pyc
 .project
 .pydevproject
