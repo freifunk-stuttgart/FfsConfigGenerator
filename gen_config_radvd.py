@@ -33,13 +33,13 @@ def genRadvd(segments, gw,config,instance):
             continue
 
         service_net_gw01n03 = "2a03:2260:3016:%02x::/64"%(int(seg))
-        service_net_gw04n03 = "2a01:1e8:c003:%02x::/64"%(int(seg))
+        service_net_gw09n03 = "2a01:1e8:c003:%02x::/64"%(int(seg))
         specific_net = "2a03:2260:3016:13%02x::/64"%(int(seg))
 
         if int(seg) in config["gws"]["%i,%i"%(gw,instance)]["segments_v6"]:
             adv_default_lifetime=""
             v6prefixes = Template(v6servicenet_template).substitute(service_net=service_net_gw01n03)
-            v6prefixes += Template(v6servicenet_template).substitute(service_net=service_net_gw04n03)
+            v6prefixes += Template(v6servicenet_template).substitute(service_net=service_net_gw09n03)
             v6prefixes += Template(v6specific_template).substitute(specific_net=specific_net)
         else:
             adv_default_lifetime=no_defaultroute_template
