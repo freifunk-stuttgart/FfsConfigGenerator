@@ -4,7 +4,6 @@ import os
 def genFastdConfig(segments,gw,config,instance):
     with open("fastd.conf.tpl","r") as fp:
         tpl = Template(fp.read())
-
     externalipv4 = None
     externalipv6 = None
     if "externalipv4" in config["gws"]["%s,%s"%(gw,instance)]:
@@ -17,6 +16,7 @@ def genFastdConfig(segments,gw,config,instance):
 
     for conf in (("vpn",10200,1340,"peers"),("bb",9040,1340,"bb")):
         (scope,portBase,mtu,group) = conf
+
         for seg in segments: #alternative MTU
             if seg == "00":
                 if scope=="vpn":
@@ -25,13 +25,19 @@ def genFastdConfig(segments,gw,config,instance):
                     continue
             else:
                 port = int(seg)+portBase
+
+            if scope=="bb":
+                auth = Template('include peers from "/etc/fastd/peers-ffs/vpn${seg}/${group}";').substitute(seg=seg,group=group)
+            else:
+                auth = Template('on verify "/var/lib/ffs/loadbalancer/fastd-verify.py -k /etc/fastd/peers-ffs/vpn${seg}/peers -g /var/www/html/data/gwstatus.json";').substitute(seg=seg)
+
             bindv4 = ""
             if not externalipv4 == None:
                 bindv4 = "bind 0.0.0.0:%i;"%(port)
             bindv6 = ""
             if not externalipv6 == None:
                 bindv6 = "bind [::]:%i;"%(port)
-            inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group=group,scope=scope,mtu=mtu)
+            inst = tpl.substitute(seg=seg,bindv4=bindv4,bindv6=bindv6,group=group,scope=scope,mtu=mtu,auth=auth)
             if not os.path.exists("etc/fastd/%s%s"%(scope,seg)):
                 os.mkdir("etc/fastd/%s%s"%(scope,seg))
             with open("etc/fastd/%s%s/fastd.conf"%(scope,seg),"w") as fp:

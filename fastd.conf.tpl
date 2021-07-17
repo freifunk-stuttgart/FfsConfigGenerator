@@ -13,4 +13,4 @@ mtu ${mtu}; # maxmtu - IPv4/IPv6 Header - fastd Header = ${mtu}
 #on verify "/root/freifunk/unclaimed.py";
 status socket "/var/run/fastd-${scope}${seg}.sock";
 
-include peers from "/etc/fastd/peers-ffs/vpn${seg}/${group}";
+${auth}
