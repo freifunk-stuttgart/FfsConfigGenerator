@@ -1,17 +1,10 @@
 from string import Template
-import collections
-from netaddr import *
+
+from netaddr import IPAddress
 
 from gen_config_utils import *
 
-ffrlEndpoints = collections.OrderedDict()
 
-ffrlEndpoints["bb-b-fra2-fra"] = "185.66.194.1"
-ffrlEndpoints["bb-b-ak-ber"] = "185.66.195.1"
-ffrlEndpoints["bb-a-ix-dus"] = "185.66.193.0"
-ffrlEndpoints["bb-a-fra2-fra"] = "185.66.194.0"
-ffrlEndpoints["bb-b-ix-dus"] = "185.66.193.1"
-ffrlEndpoints["bb-a-ak-ber"] =  "185.66.195.0"
 
 def genBirdFfrlMain(gw, instance, config):
     if not "ffrl_ipv4" in config['gws']["%i,%i"%(gw,instance)]:

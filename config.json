@@ -176,6 +176,7 @@
         {
             "externalipv6": "2001:4ba0:fff1:f8:26b:2727:103a:8a4c",
             "externalipv4": "89.163.131.200",
+            "internalipv4": "192.168.100.13",
             "ipv6network": "2a03:2260:3016:1300::/56",
             "ipv6servicenetwork": "2a03:2260:3016::/56",
             "ffrl_ipv4": "185.66.193.56",

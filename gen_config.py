@@ -8,7 +8,7 @@ from gen_config_bird import *
 from gen_config_utils import *
 from gen_config_fastd import *
 from gen_config_radvd import *
-
+from gen_config_ffrl import *
 def getGwList(config):
     result = []
     for gw in config["gws"].keys():
@@ -26,26 +26,6 @@ def genCollectd(gw,instance,config):
     with open("etc/collectd/collectd.conf","w") as fp:
         fp.write(data)
     
-def genFfrl(gw, instance,config):
-    if not "ffrl_ipv4" in config['gws']["%i,%i"%(gw,instance)]:
-        return
-    with open("ffrl.tpl","r") as fp:
-        tmpl = Template(fp.read())
-    data = ""
-    for ep in ffrlEndpoints:
-        localv4 = config['gws']["%i,%i"%(gw,instance)]["externalipv4"]
-        natv4 = config['gws']["%i,%i"%(gw,instance)]["ffrl_ipv4"]
-        data += tmpl.substitute(IFACE=ep,
-                                TUN_LOCAL_V4=str(IPAddress(config['gws']["%i,%i"%(gw,instance)]["ffrlv4"][ep])+1),
-                                TUN_REMOTE_V4=config['gws']["%i,%i"%(gw,instance)]["ffrlv4"][ep],
-                                TUN_LOCAL_V6=str(IPAddress(config['gws']["%i,%i"%(gw,instance)]["ffrlv6"][ep])+1),
-                                GRE_REMOTE=ffrlEndpoints[ep],
-                                GRE_LOCAL=localv4,
-                                NAT_V4=natv4)
-    
-    with open("etc/network/interfaces.d/ffrl","w") as fp:
-        fp.write(data)
-
 def genNetwork(segments, gw, config, nobridge):
     if nobridge == True:
         templatefile="ffs-gw-no-bridge.tpl"
