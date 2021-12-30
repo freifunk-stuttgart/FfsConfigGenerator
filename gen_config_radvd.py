@@ -39,7 +39,7 @@ def genRadvd(segments, gw,config,instance):
         if int(seg) in config["gws"]["%i,%i"%(gw,instance)]["segments_v6"]:
             adv_default_lifetime=""
             v6prefixes = Template(v6servicenet_template).substitute(service_net=service_net_gw01n03)
-            v6prefixes += Template(v6servicenet_template).substitute(service_net=service_net_gw09n03)
+            #v6prefixes += Template(v6servicenet_template).substitute(service_net=service_net_gw09n03)
             v6prefixes += Template(v6specific_template).substitute(specific_net=specific_net)
         else:
             adv_default_lifetime=no_defaultroute_template
