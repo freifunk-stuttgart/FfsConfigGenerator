@@ -1,14 +1,3 @@
-table tk_ffsdefault;
-protocol kernel k_ffsdefault from t_kernel {
-        table tk_ffsdefault;
-        kernel table 3000;
-        import none;
-        export all;
-}
-protocol pipe p_ffsdefault from p_kernel {
-        peer table tk_ffsdefault;
-}
-
 function is_default() {
     return net ~ [
         ::/0
