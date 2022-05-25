@@ -17,10 +17,13 @@ def genDhcp(segments, dhcp,config):
 
     md("etc")
     md("etc/dhcp")
+    segments = list(segments)
     segments.sort()
     for seg in segments:
         ip = IPNetwork(config["segments"][seg]["ipv4network"])
         ipv4net = str(ip.network)
+        dhcp_prefixlen = ip.prefixlen+2
+
         if seg == "00":
             continue
             ipv4gw = config["gws"]["%s"%(dhcp)]["legacyipv4"]
@@ -29,8 +32,8 @@ def genDhcp(segments, dhcp,config):
         else:
             ipv4gw = str(ip.network+1)
             netmask = ip.netmask
-            dhcp_ipnet = IPNetwork("%s/23"%(ip.network))
-            dhcp_ipnet =  list(ip.subnet(23))[dhcp]
+            #dhcp_ipnet = IPNetwork(f"%s/{dhcp_prefixlen}"%(ip.network))
+            dhcp_ipnet =  list(ip.subnet(dhcp_prefixlen))[dhcp]
 
         
             ipv4start = str(IPAddress(dhcp_ipnet.first))
@@ -43,7 +46,7 @@ def genDhcp(segments, dhcp,config):
         #ip = ip.next()
         
 
-    with open("etc/dhcp/dhcpd.conf","wb") as fp:
+    with open("etc/dhcp/dhcpd.conf","w") as fp:
         fp.write(data)
 
 
@@ -53,7 +56,7 @@ args = parser.parse_args()
 
 dhcp=int(args.DHCP)
 
-with open("config.json","rb") as fp:
+with open("config.json","r") as fp:
     config = json.load(fp)
 segments = config["segments"].keys()
 
