@@ -21,7 +21,8 @@ def genCollectd(gw,instance,config):
     with open("collectd.conf.tpl","r") as fp:
         tmpl = Template(fp.read())
     hostname = "gw%02in%02i"%(gw,instance)
-    data = tmpl.substitute(HOSTNAME=hostname)
+    ipv4=f"10.191.255.{gw*10+instance}"
+    data = tmpl.substitute(HOSTNAME=hostname,IPV4=ipv4)
     md("etc/collectd")
     with open("etc/collectd/collectd.conf","w") as fp:
         fp.write(data)
@@ -114,7 +115,7 @@ def genbb(segments,gw,instance,config):
         md("peers-ffs/vpn%s/bb"%(s))
         fn = "peers-ffs/vpn%s/bb/gw%02dn%02ds%s"%(s,gw,instance,s)
         hostname = "gw%02dn%02d"%(gw,instance)
-        port = 9040+int(s)
+        port = 9000+int(s)
         mac = "02:00:35:%s:%02d:%02d"%(s,gw,instance)
         key = config["gws"][gwn]["fastd_bb_pubkey"]
         conf = """#MAC: %s
@@ -139,12 +140,12 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/sbin/dhcrelay -d -q -a -iu ffsbb -iu ffsl3 %s 10.191.255.251 10.191.255.252 10.191.255.253
+ExecStart=/usr/local/sbin/dhcrelay -4 -d -q -q -a -c 1 10.191.255.251 10.191.255.252 10.191.255.253 10.191.255.254
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
-"""%(downstreamInterfaces)
+"""
     md("etc/systemd")    
     md("etc/systemd/system")
     with open("etc/systemd/system/isc-dhcp-relay.service","w") as fp:

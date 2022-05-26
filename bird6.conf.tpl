@@ -9,3 +9,4 @@ include "/etc/bird/bird_kernel.conf";
 include "/etc/bird/bird6_this_location.conf";
 include "/etc/bird/bird_kernel_main.conf";
 include "/etc/bird/bird6_ffrl.conf";
+include "/etc/bird/bird6_ffs_ipv6_policy.conf";

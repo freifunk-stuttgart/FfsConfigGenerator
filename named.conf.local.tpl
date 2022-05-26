@@ -15,4 +15,3 @@ zone "ffstg.de" {
   masters { 51.254.139.175; };
   file "whatever";
 };
-

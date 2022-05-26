@@ -17,7 +17,6 @@ LoadPlugin processes
 LoadPlugin swap
 LoadPlugin uptime
 LoadPlugin users
-LoadPlugin write_graphite
 LoadPlugin conntrack
 
 <Plugin df>
@@ -41,6 +40,7 @@ LoadPlugin conntrack
 </Plugin>
 
 <Plugin "write_prometheus">
+  Host "${IPV4}"
   Port "9103"
 </Plugin>
 
