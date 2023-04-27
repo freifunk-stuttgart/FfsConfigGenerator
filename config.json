@@ -1,11 +1,6 @@
 { 
     "segments": 
     {
-        "00":
-        {
-            "ipv4network":"172.21.0.0/18",
-            "ipv6network":"fd21:b4dc:4b1e::/64"
-        },
         "01": 
         {
             "ipv4network" : "10.190.0.0/21",

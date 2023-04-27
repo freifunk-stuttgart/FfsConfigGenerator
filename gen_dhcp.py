@@ -24,27 +24,16 @@ def genDhcp(segments, dhcp,config):
         ipv4net = str(ip.network)
         dhcp_prefixlen = ip.prefixlen+2
 
-        if seg == "00":
-            continue
-            ipv4gw = config["gws"]["%s"%(dhcp)]["legacyipv4"]
-            ipv4start = config["gws"]["%s"%(dhcp)]["ipv4start"]
-            ipv4end = config["gws"]["%s"%(dhcp)]["ipv4end"]
-        else:
-            ipv4gw = str(ip.network+1)
-            netmask = ip.netmask
-            #dhcp_ipnet = IPNetwork(f"%s/{dhcp_prefixlen}"%(ip.network))
-            dhcp_ipnet =  list(ip.subnet(dhcp_prefixlen))[dhcp]
+        ipv4gw = str(ip.network+1)
+        netmask = ip.netmask
+        dhcp_ipnet =  list(ip.subnet(dhcp_prefixlen))[dhcp]
 
-        
-            ipv4start = str(IPAddress(dhcp_ipnet.first))
-            ipv4end = str(IPAddress(dhcp_ipnet.last-1))
-        
-            
+        ipv4start = str(IPAddress(dhcp_ipnet.first))
+        ipv4end = str(IPAddress(dhcp_ipnet.last-1))
+
         inst = tpl.substitute(segment=seg,ipv4start=ipv4start,ipv4end=ipv4end,ipv4net=ipv4net,ipv4gw=ipv4gw,netmask=netmask)
-        
+
         data += inst
-        #ip = ip.next()
-        
 
     with open("etc/dhcp/dhcpd.conf","w") as fp:
         fp.write(data)
