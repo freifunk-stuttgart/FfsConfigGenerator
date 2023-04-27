@@ -1,6 +1,6 @@
 // Segment ${segment}
 {   
-	"subnet": "${ipv4net}/${netmask}",
+	"subnet": "${ipv4net}/${prefixlen}",
 
 	"pools": [ { "pool": "${ipv4start} - ${ipv4end}" } ],
 

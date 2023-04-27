@@ -11,14 +11,12 @@ def md(d):
         os.mkdir(d)
 
 
-def genDhcp(segments, dhcp, config):
-    with open("dhcpd.conf.tpl") as fp:
+def genDhcp(segments, dhcp, config, flavour, output):
+    with open(f"{flavour}.conf.tpl") as fp:
         tpl = Template(fp.read())
-    with open("dhcpd.conf.head") as fp:
+    with open(f"{flavour}.conf.head") as fp:
         data = fp.read()
 
-    md("etc")
-    md("etc/dhcp")
     segments = list(segments)
     segments.sort()
     for seg in segments:
@@ -28,17 +26,18 @@ def genDhcp(segments, dhcp, config):
 
         ipv4gw = str(ip.network + 1)
         netmask = ip.netmask
+        prefixlen =  ip.prefixlen
         dhcp_ipnet = list(ip.subnet(dhcp_prefixlen))[dhcp]
 
         ipv4start = str(IPAddress(dhcp_ipnet.first))
         ipv4end = str(IPAddress(dhcp_ipnet.last - 1))
 
         inst = tpl.substitute(segment=seg, ipv4start=ipv4start, ipv4end=ipv4end, ipv4net=ipv4net, ipv4gw=ipv4gw,
-                              netmask=netmask)
+                              netmask=netmask, prefixlen=prefixlen)
 
         data += inst
 
-    with open("etc/dhcp/dhcpd.conf", "w") as fp:
+    with open(f"{output}", "w") as fp:
         fp.write(data)
 
 
@@ -52,5 +51,8 @@ dhcp = int(args.DHCP)
 with open("config.json", "r") as fp:
     config = json.load(fp)
 segments = config["segments"].keys()
-
-genDhcp(segments, dhcp, config)
+md("etc")
+md("etc/dhcp")
+md("etc/kea")
+genDhcp(segments, dhcp, config, "dhcpd", "etc/dhcp/dhcp.conf")
+genDhcp(segments, dhcp, config, "kea", "etc/kea/subnet4.conf")
