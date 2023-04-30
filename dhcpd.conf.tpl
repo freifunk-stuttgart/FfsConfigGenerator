@@ -1,11 +1,7 @@
 #Segment: ${segment}
 subnet ${ipv4net} netmask ${netmask} {
     authoritative;
-    pool
-    {
-     range ${ipv4start} ${ipv4end};
-     allow all clients;
-    }
+    ${poolconfig}
     option routers ${ipv4gw};
     option domain-name-servers ${ipv4gw};
     if (packet(24, 4) != 00:00:00:00) {

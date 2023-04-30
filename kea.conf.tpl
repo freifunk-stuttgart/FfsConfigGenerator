@@ -2,7 +2,9 @@
 {   
 	"subnet": "${ipv4net}/${prefixlen}",
 
-	"pools": [ { "pool": "${ipv4start} - ${ipv4end}" } ],
+	"pools": [ 
+		${poolconfig}
+	],
 
 	"option-data": [
 		{

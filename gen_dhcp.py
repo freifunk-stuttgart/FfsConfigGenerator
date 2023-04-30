@@ -5,7 +5,6 @@ import argparse
 import os
 import json
 
-
 def md(d):
     if not os.path.exists(d):
         os.mkdir(d)
@@ -13,7 +12,9 @@ def md(d):
 
 def genDhcp(segments, dhcp, config, flavour, output):
     with open(f"{flavour}.conf.tpl") as fp:
-        tpl = Template(fp.read())
+        segment_template = Template(fp.read())
+    with open(f"{flavour}.pool.conf.tpl") as fp:
+        pool_template = Template(fp.read())
     with open(f"{flavour}.conf.head") as fp:
         data = fp.read()
 
@@ -26,14 +27,19 @@ def genDhcp(segments, dhcp, config, flavour, output):
 
         ipv4gw = str(ip.network + 1)
         netmask = ip.netmask
-        prefixlen =  ip.prefixlen
+        prefixlen = ip.prefixlen
         dhcp_ipnet = list(ip.subnet(dhcp_prefixlen))[dhcp]
 
         ipv4start = str(IPAddress(dhcp_ipnet.first))
         ipv4end = str(IPAddress(dhcp_ipnet.last - 1))
 
-        inst = tpl.substitute(segment=seg, ipv4start=ipv4start, ipv4end=ipv4end, ipv4net=ipv4net, ipv4gw=ipv4gw,
-                              netmask=netmask, prefixlen=prefixlen)
+        if seg in segments_with_pools:
+            poolconfig = pool_template.substitute(ipv4start=ipv4start, ipv4end=ipv4end)
+        else:
+            poolconfig = ""
+
+        inst = segment_template.substitute(segment=seg, ipv4net=ipv4net, ipv4gw=ipv4gw,
+                              netmask=netmask, prefixlen=prefixlen, poolconfig=poolconfig)
 
         data += inst
 
@@ -43,14 +49,29 @@ def genDhcp(segments, dhcp, config, flavour, output):
 
 parser = argparse.ArgumentParser(description='Generate Configuration for Freifunk DHCP Server')
 parser.add_argument('--dhcp', dest='DHCP', action='store', required=True,
-                    help='Config will be generated for this gateway')
+                    help='Config will be generated for this DHCP-Server')
+
+def two_digits_leading_zero(string):
+    """
+    Given a string, normalize it such that it always start with leading zero
+    """
+    number = int(string, 10)
+    return "{:02d}".format(number)
+
+parser.add_argument('--segment', dest='segments', action='append', required=False, type=two_digits_leading_zero, default=[], help='Only generate pools for these segments (default all, can be specified multiple times). Segments not given here will be generated, but will have an empty pool.')
 args = parser.parse_args()
 
 dhcp = int(args.DHCP)
 
 with open("config.json", "r") as fp:
     config = json.load(fp)
+
 segments = config["segments"].keys()
+if len(args.segments) > 0:
+    segments_with_pools = args.segments
+else:
+    segments_with_pools = config["segments"].keys()
+
 md("etc")
 md("etc/dhcp")
 md("etc/kea")
