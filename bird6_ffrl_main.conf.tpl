@@ -6,13 +6,13 @@ function is_default() {
 
 function is_ffrl_specific() {
     return net ~ [
-        2a03:2260:3016:1300::/56
+        ${IPV6NETWORK}
     ];
 }
 
 function is_ffrl_generic() {
     return net ~ [
-        2a03:2260:3016:0::/56
+        ${IPV6SERVICENETWORK}
     ];
 }
 
@@ -39,8 +39,8 @@ filter ebgp_ffrl_export_filter {
 # IP-NAT-Adresse legen wir in die interne BIRD Routing Table
 protocol static ffrl_uplink_hostroute {
     table tk_ffsdefault;
-    route 2a03:2260:3016:0000::/56 reject;
-    route 2a03:2260:3016:1300::/56 reject;
+    route ${IPV6SERVICENETWORK} reject;
+    route ${IPV6NETWORK} reject;
 }
 
 # Wir legen die Transfernetze in die interne BIRD Routing Table

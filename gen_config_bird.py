@@ -27,13 +27,16 @@ def genBirdFfrlPeers(gw, instance, config):
 
     return data
 
+
 def genBird6FfrlMain(gw, instance, config):
-    if not "ffrlv6" in config['gws']["%i,%i"%(gw,instance)]:
+    if not "ffrlv6" in config['gws']["%i,%i" % (gw, instance)]:
         return ""
-    #natv4 = config['gws']["%i,%i"%(gw,instance)]["ffrl_ipv4"]
-    with open("bird6_ffrl_main.conf.tpl","r") as fp:
+    # natv4 = config['gws']["%i,%i"%(gw,instance)]["ffrl_ipv4"]
+    with open("bird6_ffrl_main.conf.tpl", "r") as fp:
         tmpl = Template(fp.read())
-    return tmpl.substitute()
+    return tmpl.substitute(IPV6NETWORK=config['gws']["%i,%i" % (gw, instance)]['ipv6network'],
+                           IPV6SERVICENETWORK=config['gws']["%i,%i" % (gw, instance)]['ipv6servicenetwork']
+                           )
 
 def genBird6FfrlPeers(gw, instance, config):
     if not "ffrlv6" in config['gws']["%i,%i"%(gw,instance)]:
