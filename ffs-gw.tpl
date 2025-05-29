@@ -1,49 +1,53 @@
 auto br${seg}
 iface br${seg} inet static
-    hwaddress 02:00:39:${seg}:${gw}:${instance}
-    #bridge_ports none
-    bridge_fd 0
-    bridge_maxwait 0
-    bridge_hw 02:00:39:${seg}:${gw}:${instance}
-    address ${ipv4}
-    netmask ${ipv4netmask}
-    pre-up          /sbin/brctl addbr $$IFACE || true
-    pre-up          /sbin/ip -6 rule add from 2a03:2260:3016::/48 pref 10000 lookup ffsdefault || true
-    pre-up          /sbin/ip -6 rule add from 2a03:2260:3016::/48 pref 10010 lookup nodefault || true
-    up              /sbin/ip address add ${ipv6}/64 dev $$IFACE || true
-    up              /sbin/ip address add ${publicipv6}/64 dev $$IFACE || true
-    post-down       /sbin/brctl delbr $$IFACE || true
-    # be sure all incoming traffic is handled by the appropriate rt_table
-    post-up         /sbin/ip rule add iif $$IFACE table stuttgart priority 10000 || true
-    pre-down        /sbin/ip rule del iif $$IFACE table stuttgart priority 10000 || true
-    post-up         /sbin/ip rule add iif $$IFACE table nodefault priority 10010 || true
-    pre-down        /sbin/ip rule del iif $$IFACE table nodefault priority 10010 || true
-    post-up         /sbin/ip route add ${ipv4net} table stuttgart dev $$IFACE || true
-    post-down       /sbin/ip route del ${ipv4net} table stuttgart dev $$IFACE || true
-    # default route is unreachable
-    post-up         /sbin/ip route add unreachable default table nodefault || true
-    # ULA route for rt_table stuttgart
-    post-up         /sbin/ip -6 route add ${ipv6net} proto static dev $$IFACE table stuttgart || true
-    post-down       /sbin/ip -6 route del ${ipv6net} proto static dev $$IFACE table stuttgart || true
-    post-up         /sbin/ip -6 route add ${publicipv6net} proto static dev $$IFACE table stuttgart || true
-    post-down       /sbin/ip -6 route del ${publicipv6net} proto static dev $$IFACE table stuttgart || true
-    post-up         /sbin/ip -6 route add ${publicipv6servicenet} proto static dev $$IFACE table stuttgart || true
-    post-down       /sbin/ip -6 route del ${publicipv6servicenet} proto static dev $$IFACE table stuttgart || true
-    post-up         /sbin/ip -6 route add ${publicipv6servicenet} proto static dev $$IFACE || true
-    post-down       /sbin/ip -6 route del ${publicipv6servicenet} proto static dev $$IFACE || true
-    post-up         echo 4096 > /sys/devices/virtual/net/$$IFACE/bridge/hash_max || true
+  bridge_hw 02:00:39:${seg}:${gw}:${instance}
+  address ${ipv4}
+  netmask ${ipv4netmask}
+
+  bridge_fd 0
+  bridge_maxwait 0
+  bridge_hw 02:00:39:${seg}:${gw}:${instance}
+  pre-up          /sbin/brctl addbr $$IFACE || true
+  pre-up          /sbin/ip -6 rule add from 2a03:2260:3016::/48 pref 10000 lookup ffsdefault || true
+  pre-up          /sbin/ip -6 rule add from 2a03:2260:3016::/48 pref 10010 lookup nodefault || true
+  post-down       /sbin/brctl delbr $$IFACE || true
+  # be sure all incoming traffic is handled by the appropriate rt_table
+  post-up         /sbin/ip rule add iif $$IFACE table stuttgart priority 10000 || true
+  pre-down        /sbin/ip rule del iif $$IFACE table stuttgart priority 10000 || true
+  post-up         /sbin/ip rule add iif $$IFACE table nodefault priority 10010 || true
+  pre-down        /sbin/ip rule del iif $$IFACE table nodefault priority 10010 || true
+  # default route is unreachable
+  post-up         /sbin/ip route add ${ipv4net} dev $$IFACE table stuttgart || true
+  post-up         /sbin/ip route add unreachable default table nodefault || true
+  post-down       /sbin/ip route del unreachable default table nodefault || true
+  post-down       /sbin/ip route del ${ipv4net} dev $$IFACE table stuttgart || true
+  post-up         /sbin/ip addr add ${ipv6}/64 dev $$IFACE || true
+  post-up         /sbin/ip -6 route add ${ipv6net} proto static dev $$IFACE table stuttgart || true
+  post-down       /sbin/ip -6 route del ${ipv6net} proto static dev $$IFACE table stuttgart || true
+  post-down       /sbin/ip addr del ${ipv6}/64 dev $$IFACE || true
+  post-up         /sbin/ip addr add ${publicipv6}/64 dev $$IFACE || true
+  post-down       /sbin/ip addr del ${publicipv6}/64 dev $$IFACE || true
+
+  post-up         /sbin/ip -6 route add ${publicipv6net} proto static dev $$IFACE table stuttgart || true
+  post-down       /sbin/ip -6 route del ${publicipv6net} proto static dev $$IFACE table stuttgart || true
+  post-up         /sbin/ip -6 route add ${publicipv6servicenet} proto static dev $$IFACE table stuttgart || true
+  post-down       /sbin/ip -6 route del ${publicipv6servicenet} proto static dev $$IFACE table stuttgart || true
+  post-up         /sbin/ip -6 route add ${publicipv6servicenet} proto static dev $$IFACE || true
+  post-down       /sbin/ip -6 route del ${publicipv6servicenet} proto static dev $$IFACE || true
+  post-up         echo 4096 > /sys/devices/virtual/net/$$IFACE/bridge/hash_max || true
 
 allow-hotplug bat${seg}
 iface bat${seg} inet6 manual
-    pre-up          /sbin/modprobe batman-adv || true
-    post-up         /sbin/brctl addif br${seg} $$IFACE || true
-    post-up         /sbin/ip link set dev $$IFACE up || true
-    post-up         /sbin/ip link set dev $$IFACE address 02:00:39:${seg}:${gw}:${instance} || true
-    post-up         /usr/sbin/batctl -m $$IFACE it 10000 || true
-    post-up         /usr/sbin/batctl -m $$IFACE vm server || true
-    post-up         /usr/sbin/batctl -m $$IFACE gw server  96mbit/96mbit || true
-    pre-down        /sbin/brctl delif br${seg} $$IFACE || true
-    post-up         echo 60 > /sys/devices/virtual/net/$$IFACE/mesh/hop_penalty || true
+  mtu 1500
+  pre-up          /sbin/modprobe batman-adv || true
+  post-up         /sbin/brctl addif br${seg} $$IFACE || true
+  post-up         /sbin/ip link set dev $$IFACE up || true
+  post-up         /sbin/ip link set dev $$IFACE address 02:00:39:${seg}:${gw}:${instance} || true
+  post-up         /usr/sbin/batctl -m $$IFACE it 10000 || true
+  post-up         /usr/sbin/batctl -m $$IFACE vm server || true
+  post-up         /usr/sbin/batctl -m $$IFACE gw server  96mbit/96mbit || true
+  pre-down        /sbin/brctl delif br${seg} $$IFACE || true
+  post-up         echo 60 > /sys/devices/virtual/net/$$IFACE/mesh/hop_penalty || true
 
 allow-hotplug vpn${seg}
 iface vpn${seg} inet6 manual

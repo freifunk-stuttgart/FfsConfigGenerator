@@ -65,7 +65,7 @@ def genNetwork(segments, gw, config, nobridge):
             else:
                 ipv4 = str(ip.network+gw*10+instance)
         inst = tmpl.substitute(gw="%02i"%(gw),seg=seg,ipv4=ipv4,ipv4net=ip,ipv4netmask=ipv4netmask,ipv6=ipv6,ipv6net=ipv6net,publicipv6=publicipv6,publicipv6net=publicipv6net,publicipv6servicenet=publicipv6servicenet,instance="%02i"%(instance))
-        with open("etc/network/interfaces.d/ffs-seg%s"%(seg), "w") as fp:
+        with open("etc/network/interfaces.d/br%s"%(seg), "w") as fp:
             fp.write(inst)
         #ip = IPNetwork(str(ip.broadcast+1)+"/18")
 

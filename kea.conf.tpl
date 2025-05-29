@@ -1,5 +1,6 @@
 // Segment ${segment}
 {   
+    "id": ${segment},
 	"subnet": "${ipv4net}/${prefixlen}",
 
 	"pools": [ 
