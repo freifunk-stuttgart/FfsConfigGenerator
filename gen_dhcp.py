@@ -65,7 +65,8 @@ parser.add_argument('--segment', dest='segments', action='append', required=Fals
 args = parser.parse_args()
 
 dhcp = int(args.DHCP)
-
+if dhcp == 4:
+    dhcp = 3
 with open("config.json", "r") as fp:
     config = json.load(fp)
 
@@ -76,7 +77,5 @@ else:
     segments_with_pools = config["segments"].keys()
 
 md("etc")
-md("etc/dhcp")
 md("etc/kea")
-genDhcp(segments, dhcp, config, "dhcpd", "etc/dhcp/dhcp.conf")
 genDhcp(segments, dhcp, config, "kea", "etc/kea/subnet4.conf")
