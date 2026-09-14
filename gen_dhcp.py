@@ -28,13 +28,10 @@ def genDhcp(segments, dhcp, config, flavour, output):
         ipv4gw = str(ip.network + 1)
         netmask = ip.netmask
         prefixlen = ip.prefixlen
-        dhcp_ipnet = list(ip.subnet(dhcp_prefixlen))[dhcp%4]
+        #dhcp_ipnet = list(ip.subnet(dhcp_prefixlen))[dhcp]
 
-        if dhcp%4 == 0:
-            ipv4start = str(IPAddress(dhcp_ipnet.first+256))
-        else:
-            ipv4start = str(IPAddress(dhcp_ipnet.first))
-        ipv4end = str(IPAddress(dhcp_ipnet.last - 1))
+        ipv4start = str(IPAddress(ip.first+256))
+        ipv4end = str(IPAddress(ip.last - 1))
 
         if seg in segments_with_pools:
             poolconfig = pool_template.substitute(ipv4start=ipv4start, ipv4end=ipv4end)
