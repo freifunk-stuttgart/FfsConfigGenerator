@@ -16,13 +16,6 @@ function is_ffrl_generic() {
     ];
 }
 
-function is_ffrl_tunnel_nets() {
-    return net ~ [
-        2a03:2260:0:46f::/64
-        #FIXME here are some missing
-    ];
-}
-
 # BGP Import Filter fuer Rheinland
 filter ebgp_ffrl_import_filter {
     if is_default() then accept;
@@ -41,13 +34,6 @@ protocol static ffrl_uplink_hostroute {
     table tk_ffsdefault;
     route ${IPV6SERVICENETWORK} reject;
     route ${IPV6NETWORK} reject;
-}
-
-# Wir legen die Transfernetze in die interne BIRD Routing Table
-protocol direct {
-    table tk_ffsdefault;
-    interface "tun-*";
-    import where is_ffrl_tunnel_nets();
 }
 
 # BGP Template fuer Rheinland Peerings

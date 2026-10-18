@@ -12,13 +12,6 @@ function is_ffrl_nat() {
     ];
 }
 
-function is_ffrl_tunnel_nets() {
-    return net ~ [
-        100.64.8.164/31
-        #FIXME here are some missing
-    ];
-}
-
 # BGP Import Filter fuer Rheinland
 filter ebgp_ffrl_import_filter {
     if is_default() then accept;
@@ -33,20 +26,13 @@ filter ebgp_ffrl_export_filter {
 
 # IP-NAT-Adresse legen wir in die interne BIRD Routing Table
 protocol static ffrl_uplink_hostroute {
-    table tk_stuttgart;
+    table tk_ffsdefault;
     route ${NAT_V4}/32 reject;
-}
-
-# Wir legen die Transfernetze in die interne BIRD Routing Table
-protocol direct {
-    table tk_stuttgart;
-    interface "tun-*";
-    import where is_ffrl_tunnel_nets();
 }
 
 # BGP Template fuer Rheinland Peerings
 template bgp ffrl_uplink {
-    table tk_stuttgart;
+    table tk_ffsdefault;
     local as 65019;
     import keep filtered;
     import filter ebgp_ffrl_import_filter;
